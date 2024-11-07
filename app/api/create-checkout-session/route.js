@@ -1,22 +1,27 @@
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+// Retrieve the secret key from environment variables
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // Use environment variable for security
+
+// Define allowed origins (add your Webflow domain here)
+const allowedOrigins = [
+  'https://your-webflow-site.webflow.io',  // Replace with your actual Webflow URL
+  'https://your-webflow-site.com'  // If you have a custom domain
+];
 
 export async function POST(req) {
   const { origin } = req.headers;
 
-  // Allow all origins (you can restrict this to Webflow's domain later)
-  const allowedOrigins = ['https://your-webflow-site.webflow.io'];  // Update with your Webflow site URL
-
+  // Check if the origin is allowed
   if (!allowedOrigins.includes(origin)) {
-    return new Response(JSON.stringify({ error: 'CORS error' }), {
-      status: 403,
-    });
+    return new Response(
+      JSON.stringify({ error: 'CORS error' }),
+      {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
-  else{
-    console.log("hello");
-  }
-
 
   try {
     // Create Stripe Checkout session
@@ -39,14 +44,20 @@ export async function POST(req) {
       cancel_url: `${origin}/cancel`,
     });
 
-    return new Response(JSON.stringify({ url: session.url }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ url: session.url }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 }
