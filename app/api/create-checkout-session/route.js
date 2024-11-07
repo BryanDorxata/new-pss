@@ -1,11 +1,20 @@
 import Stripe from 'stripe';
 
-const stripe = new Stripe('sk_test_51Q577aPQE7cMqiYLQw4MIbs2bGbffYxYCoTcrJZR2Xv1pDIxEg1jPWz5otEfH4CBtxQeRjTjuSEC9dP5Et5JG9C700xwUvrvOJ');
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
+  const { origin } = req.headers;
+
+  // Allow all origins (you can restrict this to Webflow's domain later)
+  const allowedOrigins = ['https://your-webflow-site.webflow.io'];  // Update with your Webflow site URL
+
+  if (!allowedOrigins.includes(origin)) {
+    return new Response(JSON.stringify({ error: 'CORS error' }), {
+      status: 403,
+    });
+  }
+
   try {
-    const { origin } = req.headers;
-    
     // Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
