@@ -13,6 +13,10 @@ export async function POST(req) {
       status: 403,
     });
   }
+  else{
+    console.log("hello");
+  }
+
 
   try {
     // Create Stripe Checkout session
