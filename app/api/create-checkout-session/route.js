@@ -6,7 +6,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // Securely use enviro
 // Define allowed origins (Add your Webflow and custom domains here)
 const allowedOrigins = [
   'https://pss-5215cc.webflow.io', // Your Webflow staging URL
-  'https://your-custom-domain.com', // Replace with your custom domain, if applicable
+  'https://pss-5215cc.webflow.io/stripe-testing', // Replace with your custom domain, if applicable
 ];
 
 // Common CORS headers
