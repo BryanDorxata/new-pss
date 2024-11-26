@@ -1,17 +1,17 @@
 import Stripe from 'stripe';
 
 // Retrieve the secret key from environment variables
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // Use environment variable for security
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // Securely use environment variable
 
-// Define allowed origins (add your Webflow domain here)
+// Define allowed origins (Add your Webflow and custom domains here)
 const allowedOrigins = [
-  'https://pss-5215cc.webflow.io/', // Replace with your actual Webflow URL
-  'https://your-webflow-site.com', // If you have a custom domain
+  'https://pss-5215cc.webflow.io', // Your Webflow staging URL
+  'https://your-custom-domain.com', // Replace with your custom domain, if applicable
 ];
 
 // Common CORS headers
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*', // Replace '*' with specific domain(s) in production
+  'Access-Control-Allow-Origin': '*', // Replace '*' with specific domains in production
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
@@ -28,7 +28,10 @@ export async function OPTIONS() {
 export async function POST(req) {
   const { origin } = req.headers;
 
-  // Check if the origin is allowed (optional, for stricter CORS)
+  // Log the origin for debugging (optional)
+  console.log('Request Origin:', origin);
+
+  // Check if the origin is allowed (strict CORS check)
   if (!allowedOrigins.includes(origin)) {
     return new Response(
       JSON.stringify({ error: 'CORS error: Origin not allowed' }),
@@ -40,7 +43,7 @@ export async function POST(req) {
   }
 
   try {
-    // Parse request body
+    // Parse the request body
     const body = await req.json();
 
     // Create Stripe Checkout session
@@ -49,13 +52,13 @@ export async function POST(req) {
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: body.currency || 'usd', // Default to USD
             product_data: {
-              name: body.productName || 'Sample Product', // Use data from the request or default value
+              name: body.productName || 'Sample Product', // Default product name
             },
-            unit_amount: body.unitAmount || 1000, // Use data from the request or default value
+            unit_amount: body.unitAmount || 1000, // Default to $10.00 (in cents)
           },
-          quantity: body.quantity || 1, // Use data from the request or default value
+          quantity: body.quantity || 1, // Default quantity
         },
       ],
       mode: 'payment',
