@@ -5,25 +5,44 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // Use environment var
 
 // Define allowed origins (add your Webflow domain here)
 const allowedOrigins = [
-  'https://your-webflow-site.webflow.io',  // Replace with your actual Webflow URL
-  'https://your-webflow-site.com'  // If you have a custom domain
+  'https://your-webflow-site.webflow.io', // Replace with your actual Webflow URL
+  'https://your-webflow-site.com', // If you have a custom domain
 ];
 
+// Common CORS headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*', // Replace '*' with specific domain(s) in production
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+// Handle preflight (OPTIONS) requests
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
+}
+
+// Handle POST requests
 export async function POST(req) {
   const { origin } = req.headers;
 
-  // Check if the origin is allowed
+  // Check if the origin is allowed (optional, for stricter CORS)
   if (!allowedOrigins.includes(origin)) {
     return new Response(
-      JSON.stringify({ error: 'CORS error' }),
+      JSON.stringify({ error: 'CORS error: Origin not allowed' }),
       {
         status: 403,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   }
 
   try {
+    // Parse request body
+    const body = await req.json();
+
     // Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -32,11 +51,11 @@ export async function POST(req) {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'Sample Product',
+              name: body.productName || 'Sample Product', // Use data from the request or default value
             },
-            unit_amount: 1000, // 10.00 USD
+            unit_amount: body.unitAmount || 1000, // Use data from the request or default value
           },
-          quantity: 1,
+          quantity: body.quantity || 1, // Use data from the request or default value
         },
       ],
       mode: 'payment',
@@ -48,7 +67,7 @@ export async function POST(req) {
       JSON.stringify({ url: session.url }),
       {
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   } catch (error) {
@@ -56,7 +75,7 @@ export async function POST(req) {
       JSON.stringify({ error: error.message }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   }
