@@ -5,7 +5,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // Use environment var
 
 // Define allowed origins (add your Webflow domain here)
 const allowedOrigins = [
-  'https://your-webflow-site.webflow.io', // Replace with your actual Webflow URL
+  'https://pss-5215cc.webflow.io/', // Replace with your actual Webflow URL
   'https://your-webflow-site.com', // If you have a custom domain
 ];
 
