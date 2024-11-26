@@ -5,13 +5,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // Securely use enviro
 
 // Define allowed origins (Add your Webflow and custom domains here)
 const allowedOrigins = [
-  'https://pss-5215cc.webflow.io',           // Your Webflow staging URL
-  'https://pss-5215cc.webflow.io/stripe-testing', // Specific page URL
+  'https://pss-5215cc.webflow.io',            // Main Webflow URL
+  'https://pss-5215cc.webflow.io/stripe-testing',  // Specific page URL
 ];
 
 // Common CORS headers
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',  // Allow any origin temporarily (for testing only)
+  'Access-Control-Allow-Origin': '*',  // Allow any origin for debugging
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
@@ -26,9 +26,8 @@ export async function OPTIONS() {
 
 // Handle POST requests
 export async function POST(req) {
-  const { origin } = req.headers;
-
-  // Log the origin for debugging (optional)
+  // Log the incoming origin for debugging
+  const origin = req.headers.get('Origin');
   console.log('Request Origin:', origin);
 
   // Check if the origin is allowed (strict CORS check)
