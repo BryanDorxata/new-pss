@@ -22,7 +22,7 @@ export async function GET() {
       const items = Array.isArray(order.products_ordered?.items)
         ? order.products_ordered.items
         : [];
-      
+
       items.forEach(item => {
         const productId = item.id;
         const quantity = item.quantity || 0;
@@ -39,10 +39,10 @@ export async function GET() {
       .sort(([, qtyA], [, qtyB]) => qtyB - qtyA) // Sort by quantity
       .slice(0, 6); // Take the top 6
 
-    // Format the response
+    // Format the response to include both product ID and total quantity
     const response = {};
-    topProducts.forEach(([id], index) => {
-      response[`top${index + 1}-id`] = id;
+    topProducts.forEach(([id, total], index) => {
+      response[`top${index + 1}`] = { id, total };
     });
 
     return new Response(JSON.stringify(response), {
