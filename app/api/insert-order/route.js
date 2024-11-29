@@ -1,39 +1,37 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function GET() {
   try {
-    // Query to count orders grouped by month and year
     const { data, error } = await supabase.rpc('count_orders_by_month');
 
     if (error) {
-      throw new Error(error.message);
+      console.error('Error fetching data from Supabase RPC:', error);
+      return new Response(JSON.stringify({ error: 'Failed to fetch data.' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    // Transform the data into the desired format
-    const formattedResponse = {};
+    // Format the response
+    const formattedData = {};
     data.forEach((row) => {
       const monthYear = `${row.month}-${row.year}`;
-      formattedResponse[monthYear] = row.count;
+      formattedData[monthYear] = row.count;
     });
 
-    return new Response(JSON.stringify(formattedResponse), {
+    return new Response(JSON.stringify(formattedData), {
       status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
     });
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    return new Response(JSON.stringify({ error: 'Unexpected error occurred.' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
