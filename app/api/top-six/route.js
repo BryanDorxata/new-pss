@@ -14,7 +14,7 @@ export async function GET() {
 
     if (error) throw new Error(error.message);
 
-    // Process the products_ordered to calculate total quantities
+    // Initialize a dictionary to count product quantities
     const productCounts = {};
 
     orders.forEach(order => {
@@ -23,18 +23,19 @@ export async function GET() {
         ? order.products_ordered.items
         : [];
 
+      // Loop through each item in the order
       items.forEach(item => {
         const productId = item.id;
-        const quantity = item.quantity || 0;
+        const quantity = parseInt(item.quantity, 10) || 0;
 
         if (!productCounts[productId]) {
           productCounts[productId] = 0;
         }
-        productCounts[productId] += quantity;
+        productCounts[productId] += quantity; // Accumulate quantity
       });
     });
 
-    // Sort products by quantity sold (descending) and take the top 6
+    // Sort products by total quantity (descending) and take the top 6
     const topProducts = Object.entries(productCounts)
       .sort(([, qtyA], [, qtyB]) => qtyB - qtyA) // Sort by quantity
       .slice(0, 6); // Take the top 6
