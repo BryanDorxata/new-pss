@@ -19,20 +19,44 @@ export async function GET() {
     if (error) {
       return new Response(
         JSON.stringify({ error: error.message }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { 
+          status: 500, 
+          headers: { 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',  // Disable caching
+            'Pragma': 'no-cache',  // Disable caching for HTTP/1.0 requests
+            'Expires': '0'         // Set expiry to 0
+          } 
+        }
       );
     }
 
-    // Return the data
+    // Return the data with no-cache headers to prevent caching
     return new Response(
       JSON.stringify(data),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      { 
+        status: 200, 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',  // Disable caching
+          'Pragma': 'no-cache',  // Disable caching for HTTP/1.0 requests
+          'Expires': '0'         // Set expiry to 0
+        }
+      }
     );
   } catch (err) {
     console.error('Error fetching orders:', err);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { 
+        status: 500, 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',  // Disable caching
+          'Pragma': 'no-cache',  // Disable caching for HTTP/1.0 requests
+          'Expires': '0'         // Set expiry to 0
+        }
+      }
     );
   }
 }
