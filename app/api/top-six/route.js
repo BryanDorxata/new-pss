@@ -7,60 +7,55 @@ const supabase = createClient(
 
 export async function GET() {
   try {
-    // Fetch all orders from the "orders" table
+    // Fetch all rows from the orders table
     const { data: orders, error } = await supabase
       .from('orders')
       .select('products_ordered');
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      throw new Error(`Supabase error: ${error.message}`);
+    }
 
-    // Initialize a dictionary to count product quantities
+    // Aggregate quantities by product ID
     const productCounts = {};
 
-    orders.forEach(order => {
-      // Ensure products_ordered.items is an array
-      const items = Array.isArray(order.products_ordered?.items)
-        ? order.products_ordered.items
-        : [];
+    orders.forEach((order) => {
+      const items = order.products_ordered.items;
 
-      // Loop through each item in the order
-      items.forEach(item => {
+      // Ensure `items` is always treated as an array
+      const itemsArray = Array.isArray(items) ? items : [items];
+
+      itemsArray.forEach((item) => {
         const productId = item.id;
-        const quantity = parseInt(item.quantity, 10) || 0;
+        const quantity = parseInt(item.quantity, 10) || 0; // Safely parse quantity as an integer
 
         if (!productCounts[productId]) {
           productCounts[productId] = 0;
         }
-        productCounts[productId] += quantity; // Accumulate quantity
+        productCounts[productId] += quantity;
       });
     });
 
     // Sort products by total quantity (descending) and take the top 6
-    const topProducts = Object.entries(productCounts)
-      .sort(([, qtyA], [, qtyB]) => qtyB - qtyA) // Sort by quantity
-      .slice(0, 6); // Take the top 6
+    const sortedProducts = Object.entries(productCounts)
+      .sort(([, countA], [, countB]) => countB - countA)
+      .slice(0, 6);
 
-    // Format the response to include both product ID and total quantity
+    // Format the response
     const response = {};
-    topProducts.forEach(([id, total], index) => {
+    sortedProducts.forEach(([id, total], index) => {
       response[`top${index + 1}`] = { id, total };
     });
 
+    // Return the response
     return new Response(JSON.stringify(response), {
       status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      {
-        status: 400,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return new Response(JSON.stringify({ success: false, error: error.message }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
