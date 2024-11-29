@@ -4,34 +4,58 @@ const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export async function GET() {
+export async function POST(req) {
   try {
-    const { data, error } = await supabase.rpc('count_orders_by_month');
+    // Parse the request body
+    const body = await req.json();
 
+    // Define the order data (modify as per your table schema)
+    const {
+      customer_name,
+      customer_email,
+      address,
+      shipping_details,
+      products_ordered,
+      confirmation,
+      shippingDetails,
+      phone_number,
+    } = body;
+
+    // Insert the order into the Supabase table
+    const { data, error } = await supabase
+      .from('orders')
+      .insert([
+        {
+          customer_name,
+          customer_email,
+          address,
+          shipping_details,
+          products_ordered,
+          confirmation,
+          shippingDetails,
+          phone_number,
+        },
+      ]);
+
+    // Handle errors from Supabase
     if (error) {
-      console.error('Error fetching data from Supabase RPC:', error);
-      return new Response(JSON.stringify({ error: 'Failed to fetch data.' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      console.error('Error inserting order:', error);
+      return new Response(
+        JSON.stringify({ error: 'Failed to insert order.' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Format the response
-    const formattedData = {};
-    data.forEach((row) => {
-      const monthYear = `${row.month}-${row.year}`;
-      formattedData[monthYear] = row.count;
-    });
-
-    return new Response(JSON.stringify(formattedData), {
+    // Success response
+    return new Response(JSON.stringify({ success: true, data }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err) {
     console.error('Unexpected error:', err);
-    return new Response(JSON.stringify({ error: 'Unexpected error occurred.' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ error: 'Unexpected error occurred.' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }
