@@ -1,39 +1,38 @@
 import { createClient } from '@supabase/supabase-js';
 
+const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.PUBLIC_SUPABASE_ANON_KEY;
+
 // Initialize Supabase client
-const supabase = createClient(
-  process.env.PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export async function GET() {
   try {
-    // Query to count orders grouped by month and year
     const { data, error } = await supabase.rpc('count_orders_by_month');
 
     if (error) {
-      throw new Error(error.message);
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    // Transform the data into the desired format
-    const formattedResponse = {};
-    data.forEach((row) => {
-      const monthYear = `${row.month}-${row.year}`;
-      formattedResponse[monthYear] = row.count;
-    });
+    // Convert results into { "mm-yyyy": count } format
+    const formattedData = data.reduce((acc, item) => {
+      const [year, month] = [item.month.substr(0, 4), item.month.substr(4)];
+      const formattedMonth = `${month}-${year}`;
+      acc[formattedMonth] = item.count;
+      return acc;
+    }, {});
 
-    return new Response(JSON.stringify(formattedResponse), {
+    return new Response(JSON.stringify(formattedData), {
       status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
     });
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
