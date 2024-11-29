@@ -18,7 +18,11 @@ export async function GET() {
     const productCounts = {};
 
     orders.forEach(order => {
-      const items = order.products_ordered?.items || [];
+      // Ensure products_ordered.items is an array
+      const items = Array.isArray(order.products_ordered?.items)
+        ? order.products_ordered.items
+        : [];
+      
       items.forEach(item => {
         const productId = item.id;
         const quantity = item.quantity || 0;
