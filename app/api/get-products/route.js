@@ -5,17 +5,28 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY // Use service role key for fetching products
 );
 
+// Handle CORS preflight request
+export async function OPTIONS() {
+  const headers = {
+    'Access-Control-Allow-Origin': '*', // Change to your Webflow URL for production
+    'Access-Control-Allow-Methods': 'GET, OPTIONS', // Allow OPTIONS and GET methods
+    'Access-Control-Allow-Headers': 'Content-Type', // Allow the Content-Type header
+  };
+
+  return new Response(null, { status: 204, headers });
+}
+
 export async function GET() {
   try {
     // Set CORS headers to allow the request
     const headers = {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*', // Allow all origins, you can specify your Webflow URL if needed
+      'Access-Control-Allow-Origin': '*', // Allow all origins, change this for production
       'Access-Control-Allow-Headers': 'Content-Type', // Allow Content-Type header
-      'Access-Control-Allow-Methods': 'GET', // Allow GET method
+      'Access-Control-Allow-Methods': 'GET, OPTIONS', // Allow GET method
     };
 
-    // Query products from the database (you can adjust this as needed)
+    // Query products from the database
     const { data, error } = await supabase.from('products').select('*');
 
     if (error) {
