@@ -7,42 +7,72 @@ const supabase = createClient(
 
 export async function POST(req) {
   try {
-    // Parse the request body to get the order ID
     const { id } = await req.json();
 
-    // Check if an ID was provided
     if (!id) {
       return new Response(
-        JSON.stringify({ error: 'Order ID is required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: "Order ID is required" }),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*", // Allow all origins
+          },
+        }
       );
     }
 
-    // Query the orders table for the specific row by ID
     const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('id', id)
-      .single(); // Fetch a single row
+      .from("orders")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-    // Handle any errors
     if (error) {
       return new Response(
         JSON.stringify({ error: error.message }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        {
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*", // Allow all origins
+          },
+        }
       );
     }
 
-    // Return the retrieved data
     return new Response(
-      JSON.stringify({ success: true, data }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify(data),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*", // Allow all origins
+        },
+      }
     );
   } catch (err) {
-    console.error('Error fetching order:', err);
+    console.error("Error fetching order:", err);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: "Internal server error" }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*", // Allow all origins
+        },
+      }
     );
   }
+}
+
+export function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*", // Allow all origins
+      "Access-Control-Allow-Methods": "POST, OPTIONS", // Allowed methods
+      "Access-Control-Allow-Headers": "Content-Type", // Allowed headers
+    },
+  });
 }
