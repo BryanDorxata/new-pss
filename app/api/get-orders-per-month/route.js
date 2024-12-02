@@ -1,51 +1,39 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Initialize Supabase client
 const supabase = createClient(
   process.env.PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-export async function GET(req) {
+export async function GET() {
   try {
-    // CORS headers to allow Webflow requests
-    const headers = {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': 'https://branch--docs-pss-5215cc-8aef6a.webflow.io', // Replace with your Webflow URL
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS', // Allow methods as needed
-    };
-
-    // Handle OPTIONS request for CORS preflight check
-    if (req.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers });
-    }
-
-    const { searchParams } = new URL(req.url);
-    const storeReference = searchParams.get('store_reference');
-
-    // Query the orders table using the store_reference
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('store_reference', storeReference);
+    // Query to count orders grouped by month and year
+    const { data, error } = await supabase.rpc('count_orders_by_month');
 
     if (error) {
-      return new Response(
-        JSON.stringify({ error: error.message }),
-        { status: 500, headers }
-      );
+      throw new Error(error.message);
     }
 
-    // Return the data
-    return new Response(
-      JSON.stringify(data),
-      { status: 200, headers }
-    );
-  } catch (err) {
-    console.error('Error fetching orders:', err);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    // Transform the data into the desired format
+    const formattedResponse = {};
+    data.forEach((row) => {
+      const monthYear = `${row.month}-${row.year}`;
+      formattedResponse[monthYear] = row.count;
+    });
+
+    return new Response(JSON.stringify(formattedResponse), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 400,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
   }
 }
