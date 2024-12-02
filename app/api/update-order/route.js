@@ -14,7 +14,13 @@ export async function PATCH(req) {
     if (!id) {
       return new Response(
         JSON.stringify({ error: 'Order ID is required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*', // Allow all origins
+          },
+        }
       );
     }
 
@@ -22,26 +28,55 @@ export async function PATCH(req) {
     const { data, error } = await supabase
       .from('orders')
       .update(updatedFields) // Only include fields provided in the request
-      .eq('id', id) // Match the order by ID
+      .eq('id', id); // Match the order by ID
 
     // Handle errors
     if (error) {
       return new Response(
         JSON.stringify({ error: error.message }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*', // Allow all origins
+          },
+        }
       );
     }
 
     // Return the updated data
     return new Response(
       JSON.stringify({ success: true, data }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*', // Allow all origins
+        },
+      }
     );
   } catch (err) {
     console.error('Error updating order:', err);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*', // Allow all origins
+        },
+      }
     );
   }
+}
+
+export function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
 }
