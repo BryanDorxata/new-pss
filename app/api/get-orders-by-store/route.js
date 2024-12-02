@@ -7,12 +7,12 @@ const supabase = createClient(
 
 export async function GET(req) {
   try {
-    // CORS headers to allow Webflow requests
+    // Handle CORS for actual request
     const headers = {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': 'https://branch--docs-pss-5215cc-8aef6a.webflow.io', // Replace with your Webflow URL
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS', // Allow methods as needed
+      'Access-Control-Allow-Origin': '*', // Allow all origins
+      'Access-Control-Allow-Methods': 'GET, OPTIONS', // Allowed methods
+      'Access-Control-Allow-Headers': 'Content-Type', // Allowed headers
     };
 
     // Handle OPTIONS request for CORS preflight check
@@ -20,10 +20,18 @@ export async function GET(req) {
       return new Response(null, { status: 204, headers });
     }
 
+    // Parse query parameters
     const { searchParams } = new URL(req.url);
     const storeReference = searchParams.get('store_reference');
 
-    // Query the orders table using the store_reference
+    if (!storeReference) {
+      return new Response(
+        JSON.stringify({ error: 'Store reference is required' }),
+        { status: 400, headers }
+      );
+    }
+
+    // Query the orders table based on store reference
     const { data, error } = await supabase
       .from('orders')
       .select('*')
@@ -36,7 +44,7 @@ export async function GET(req) {
       );
     }
 
-    // Return the data
+    // Return the fetched orders
     return new Response(
       JSON.stringify(data),
       { status: 200, headers }
