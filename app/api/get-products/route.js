@@ -1,11 +1,18 @@
-export async function GET(req) {
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY // Use service role key for fetching products
+);
+
+export async function GET() {
   try {
     // Set CORS headers to allow the request
     const headers = {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*', // Allow all origins
+      'Access-Control-Allow-Origin': '*', // Allow all origins, you can specify your Webflow URL if needed
       'Access-Control-Allow-Headers': 'Content-Type', // Allow Content-Type header
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH', // Allow methods you need
+      'Access-Control-Allow-Methods': 'GET', // Allow GET method
     };
 
     // Query products from the database (you can adjust this as needed)
