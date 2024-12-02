@@ -1,37 +1,51 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(
+  process.env.PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
-export async function GET() {
+export async function GET(req) {
   try {
-    const { data, error } = await supabase.rpc('count_orders_by_month');
+    // CORS headers to allow Webflow requests
+    const headers = {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': 'https://branch--docs-pss-5215cc-8aef6a.webflow.io', // Replace with your Webflow URL
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS', // Allow methods as needed
+    };
 
-    if (error) {
-      console.error('Error fetching data from Supabase RPC:', error);
-      return new Response(JSON.stringify({ error: 'Failed to fetch data.' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    // Handle OPTIONS request for CORS preflight check
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers });
     }
 
-    // Format the response
-    const formattedData = {};
-    data.forEach((row) => {
-      const monthYear = `${row.month}-${row.year}`;
-      formattedData[monthYear] = row.count;
-    });
+    const { searchParams } = new URL(req.url);
+    const storeReference = searchParams.get('store_reference');
 
-    return new Response(JSON.stringify(formattedData), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    // Query the orders table using the store_reference
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('store_reference', storeReference);
+
+    if (error) {
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { status: 500, headers }
+      );
+    }
+
+    // Return the data
+    return new Response(
+      JSON.stringify(data),
+      { status: 200, headers }
+    );
   } catch (err) {
-    console.error('Unexpected error:', err);
-    return new Response(JSON.stringify({ error: 'Unexpected error occurred.' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    console.error('Error fetching orders:', err);
+    return new Response(
+      JSON.stringify({ error: 'Internal server error' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }
