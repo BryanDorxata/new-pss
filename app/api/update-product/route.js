@@ -2,15 +2,14 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // Use service role key for updates
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 export async function PATCH(req) {
   try {
     // Parse the request body
-    const { id, ...updatedFields } = await req.json(); // Extract id and fields to update
+    const { id, ...updatedFields } = await req.json();
 
-    // If no id is provided, return an error
     if (!id) {
       return new Response(
         JSON.stringify({ error: 'Product ID is required' }),
@@ -18,59 +17,80 @@ export async function PATCH(req) {
           status: 400,
           headers: {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*', // Allow all origins
+            'Access-Control-Allow-Origin': '*',
           },
         }
       );
     }
 
-    // Update the product in the products table
-    const { data, error } = await supabase
-      .from('products')
-      .update(updatedFields) // Update only fields provided in the request
-      .eq('id', id); // Match the product by ID
+    console.log('Updating product:', { id, ...updatedFields });
 
-    // Handle errors during update
-    if (error) {
+    // Update the product in the database
+    const { error: updateError } = await supabase
+      .from('products')
+      .update(updatedFields)
+      .eq('id', id);
+
+    if (updateError) {
+      console.error('Update error:', updateError.message);
       return new Response(
-        JSON.stringify({ error: error.message }),
+        JSON.stringify({ error: updateError.message }),
         {
           status: 500,
           headers: {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*', // Allow all origins
+            'Access-Control-Allow-Origin': '*',
           },
         }
       );
     }
 
-    // Return the updated data
+    // Fetch the updated row
+    const { data, error: fetchError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError) {
+      console.error('Fetch error:', fetchError.message);
+      return new Response(
+        JSON.stringify({ error: fetchError.message }),
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
+    }
+
     return new Response(
       JSON.stringify({ success: true, data }),
       {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*', // Allow all origins
+          'Access-Control-Allow-Origin': '*',
         },
       }
     );
   } catch (err) {
-    console.error('Error updating product:', err);
+    console.error('Internal server error:', err);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       {
         status: 500,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*', // Allow all origins
+          'Access-Control-Allow-Origin': '*',
         },
       }
     );
   }
 }
 
-// Handle preflight OPTIONS requests for CORS
 export function OPTIONS() {
   return new Response(null, {
     status: 204,
