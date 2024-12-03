@@ -1,66 +1,83 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client
 const supabase = createClient(
   process.env.PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY // Use service role key for updates
 );
 
 export async function PATCH(req) {
   try {
     // Parse the request body
-    const { id, updates } = await req.json();
+    const { id, ...updatedFields } = await req.json(); // Extract id and fields to update
 
-    // Validate the incoming request
-    if (!id || !updates || typeof updates !== 'object') {
+    // If no id is provided, return an error
+    if (!id) {
       return new Response(
-        JSON.stringify({ success: false, error: "Invalid request. 'id' and 'updates' are required." }),
+        JSON.stringify({ error: 'Product ID is required' }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*', // Allow all origins
+          },
         }
       );
     }
 
-    // Perform the update in the products table
+    // Update the product in the products table
     const { data, error } = await supabase
       .from('products')
-      .update(updates)
-      .eq('id', id)
-      .select();
+      .update(updatedFields) // Update only fields provided in the request
+      .eq('id', id); // Match the product by ID
 
+    // Handle errors during update
     if (error) {
-      throw new Error(error.message);
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*', // Allow all origins
+          },
+        }
+      );
     }
 
-    // Respond with the updated product details
+    // Return the updated data
     return new Response(
       JSON.stringify({ success: true, data }),
       {
         status: 200,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*', // Allow all origins
+        },
       }
     );
-  } catch (error) {
-    // Handle any errors
+  } catch (err) {
+    console.error('Error updating product:', err);
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ error: 'Internal server error' }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*', // Allow all origins
+        },
       }
     );
   }
 }
 
+// Handle preflight OPTIONS requests for CORS
 export function OPTIONS() {
-  // Handle preflight CORS requests
   return new Response(null, {
     status: 204,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'PATCH, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     },
   });
 }
