@@ -70,7 +70,7 @@ export async function POST(req) {
 }
 
 // Add the OPTIONS method to handle preflight requests
-export async function OPTIONS(req) {
+export async function OPTIONS() {
   return new Response(null, {
     status: 204,
     headers: {
