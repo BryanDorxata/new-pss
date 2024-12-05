@@ -11,12 +11,13 @@ export async function POST(req) {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',  // Allow all origins
             'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',  // Allow specific methods
+            'Access-Control-Allow-Headers': 'Content-Type',  // Allow specific headers
           },
         }
       );
     }
 
-    // Now use storefrontId to fetch data from your database (e.g., Supabase)
+    // Fetch the storefront data from your database
     const { data, error } = await supabase
       .from('storefront')
       .select('*')
@@ -32,6 +33,7 @@ export async function POST(req) {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',  // Allow all origins
             'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',  // Allow specific methods
+            'Access-Control-Allow-Headers': 'Content-Type',  // Allow specific headers
           },
         }
       );
@@ -45,11 +47,11 @@ export async function POST(req) {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',  // Allow all origins
           'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',  // Allow specific methods
+          'Access-Control-Allow-Headers': 'Content-Type',  // Allow specific headers
         },
       }
     );
   } catch (error) {
-    // You can log the error here if needed
     console.error("Error processing request:", error);
 
     return new Response(
@@ -60,8 +62,21 @@ export async function POST(req) {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',  // Allow all origins
           'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',  // Allow specific methods
+          'Access-Control-Allow-Headers': 'Content-Type',  // Allow specific headers
         },
       }
     );
   }
+}
+
+// Add the OPTIONS method to handle preflight requests
+export async function OPTIONS(req) {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',  // Allow all origins
+      'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',  // Allow specific methods
+      'Access-Control-Allow-Headers': 'Content-Type',  // Allow specific headers
+    },
+  });
 }
