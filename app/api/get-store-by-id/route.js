@@ -1,77 +1,35 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // Use service role key for server-side operations
-);
-
 export async function POST(req) {
   try {
-    // Parse the request body
+    // Handle the request (e.g., fetching data from Supabase)
     const { storefrontId } = await req.json();
 
-    if (!storefrontId) {
-      return new Response(
-        JSON.stringify({ error: 'storefrontId is required' }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*', // Allow all origins
-          },
-        }
-      );
-    }
+    // Your logic to retrieve the data by storefrontId goes here...
 
-    // Retrieve the storefront row from the database by its id
-    const { data, error } = await supabase
-      .from('storefront')
-      .select('*')
-      .eq('id', storefrontId)
-      .single(); // Return single row
+    const responseData = {
+      success: true,
+      data: { /* your retrieved data */ }
+    };
 
-    if (error) {
-      return new Response(
-        JSON.stringify({ error: error.message }),
-        {
-          status: 500,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*', // Allow all origins
-          },
-        }
-      );
-    }
-
-    // Return the retrieved data
+    // Set CORS headers to allow requests from any origin
+    return new Response(JSON.stringify(responseData), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*', // Allow all origins (or specify your Webflow domain here)
+        'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type'
+      }
+    });
+  } catch (error) {
     return new Response(
-      JSON.stringify({ success: true, data }),
-      {
-        status: 200,
-      },
-    );
-  } catch (err) {
-    console.error('Error retrieving storefront:', err);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      {
+      JSON.stringify({ error: error.message }),
+      { 
         status: 500,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*', // Allow all origins
+          'Access-Control-Allow-Origin': '*', // Allow all origins (or specify your Webflow domain here)
         },
       }
     );
   }
-}
-
-export function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
 }
