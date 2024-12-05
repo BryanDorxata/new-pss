@@ -5,11 +5,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY // Use service role key for server-side operations
 );
 
-export async function GET(req) {
+export async function POST(req) {
   try {
-    // Extract storefrontId from the query parameters
-    const url = new URL(req.url);
-    const storefrontId = url.searchParams.get('storefrontId');
+    // Parse the request body
+    const { storefrontId } = await req.json();
 
     if (!storefrontId) {
       return new Response(
@@ -49,11 +48,7 @@ export async function GET(req) {
       JSON.stringify({ success: true, data }),
       {
         status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*', // Allow all origins
-        },
-      }
+      },
     );
   } catch (err) {
     console.error('Error retrieving storefront:', err);
