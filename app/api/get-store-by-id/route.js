@@ -46,7 +46,10 @@ export async function POST(req) {
         },
       }
     );
-  } catch (err) {
+  } catch (error) {
+    // You can log the error here if needed
+    console.error("Error processing request:", error);
+
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       {
