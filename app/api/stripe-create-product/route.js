@@ -1,61 +1,83 @@
+import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+// Initialize Stripe client
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
   try {
-    const { name, description, images, default_price } = await req.json();
+    // Parse the request body
+    const { name, description, price, main_image } = await req.json();
 
-    if (!name || !default_price) {
+    // Validate required fields
+    if (!name || !price) {
       return new Response(
-        JSON.stringify({ error: "Name and default price are required" }),
+        JSON.stringify({ error: 'Name and price are required' }),
         {
           status: 400,
           headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*", // Allow all origins
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
           },
         }
       );
     }
 
-    // Create a product in Stripe
-    const product = await stripe.products.create({
+    // Create the product in Stripe
+    const stripeProduct = await stripe.products.create({
       name,
       description,
-      images,
+      images: main_image ? [main_image] : undefined,
     });
 
-    // Create a price for the product
-    const price = await stripe.prices.create({
-      unit_amount: Math.round(default_price * 100), // Convert to cents
-      currency: 'usd',
-      product: product.id,
-    });
+    // Insert the product into Supabase
+    const { data, error } = await supabase.from('products').insert({
+      name,
+      description,
+      stripe_product_id: stripeProduct.id,
+      base_price: price,
+      main_image,
+    }).select();
 
+    if (error) {
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
+    }
+
+    // Respond with the inserted row
     return new Response(
-      JSON.stringify({
-        message: "Product created successfully",
-        product,
-        price,
-      }),
+      JSON.stringify(data[0]), // Send the first row created as the response
       {
         status: 201,
         headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*", // Allow all origins
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
         },
       }
     );
-  } catch (error) {
-    console.error("Error creating product:", error);
+  } catch (err) {
+    console.error('Error creating product:', err);
     return new Response(
-      JSON.stringify({ error: "Internal server error", details: error.message }),
+      JSON.stringify({ error: 'Internal server error' }),
       {
         status: 500,
         headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*", // Allow all origins
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
         },
       }
     );
@@ -66,9 +88,9 @@ export function OPTIONS() {
   return new Response(null, {
     status: 204,
     headers: {
-      "Access-Control-Allow-Origin": "*", // Allow all origins
-      "Access-Control-Allow-Methods": "POST, OPTIONS", // Allowed methods
-      "Access-Control-Allow-Headers": "Content-Type", // Allowed headers
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
     },
   });
 }
