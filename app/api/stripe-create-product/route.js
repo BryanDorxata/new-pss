@@ -1,83 +1,88 @@
-import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(
   process.env.PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// Initialize Stripe client
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 export async function POST(req) {
   try {
-    // Parse the request body
     const { name, description, price, main_image } = await req.json();
 
-    // Validate required fields
     if (!name || !price) {
       return new Response(
-        JSON.stringify({ error: 'Name and price are required' }),
+        JSON.stringify({ error: "Name and price are required" }),
         {
           status: 400,
           headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
           },
         }
       );
     }
 
-    // Create the product in Stripe
+    // Step 1: Create the product in Stripe
     const stripeProduct = await stripe.products.create({
       name,
       description,
-      images: main_image ? [main_image] : undefined,
+      images: [main_image],
     });
 
-    // Insert the product into Supabase
-    const { data, error } = await supabase.from('products').insert({
-      name,
-      description,
-      stripe_product_id: stripeProduct.id,
-      base_price: price,
-      main_image,
-    }).select();
+    // Step 2: Create the price object in Stripe
+    const stripePrice = await stripe.prices.create({
+      unit_amount: Math.round(price * 100), // Convert price to cents
+      currency: "usd", // Adjust this to your desired currency
+      product: stripeProduct.id,
+    });
+
+    // Step 3: Insert product details into Supabase
+    const { data, error } = await supabase
+      .from("products") // Adjust to match your Supabase table name
+      .insert([
+        {
+          name,
+          description,
+          base_price: price,
+          main_image,
+          stripe_product_id: stripeProduct.id,
+          stripe_price_id: stripePrice.id,
+        },
+      ])
+      .select()
+      .single();
 
     if (error) {
-      return new Response(
-        JSON.stringify({ error: error.message }),
-        {
-          status: 500,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
+      console.error("Supabase error:", error);
+      throw new Error("Failed to save product in Supabase");
     }
 
-    // Respond with the inserted row
+    // Step 4: Return success response with the created product and price details
     return new Response(
-      JSON.stringify(data[0]), // Send the first row created as the response
+      JSON.stringify({
+        message: "Product created successfully",
+        product: data,
+        stripe: { product: stripeProduct, price: stripePrice },
+      }),
       {
-        status: 201,
+        status: 200,
         headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
         },
       }
     );
   } catch (err) {
-    console.error('Error creating product:', err);
+    console.error("Error creating product:", err);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: "Internal server error" }),
       {
         status: 500,
         headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
         },
       }
     );
@@ -88,9 +93,9 @@ export function OPTIONS() {
   return new Response(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
     },
   });
 }
