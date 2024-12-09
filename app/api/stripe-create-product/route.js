@@ -6,7 +6,6 @@ export async function POST(req) {
   try {
     const { name, description, images, default_price } = await req.json();
 
-    // Validate required fields
     if (!name || !default_price) {
       return new Response(
         JSON.stringify({ error: "Name and default price are required" }),
@@ -14,39 +13,49 @@ export async function POST(req) {
           status: 400,
           headers: {
             "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*", // Allow all origins
           },
         }
       );
     }
 
-    // Create Stripe product
+    // Create a product in Stripe
     const product = await stripe.products.create({
       name,
       description,
-      images, // This should be an array of image URLs
-      default_price_data: {
-        unit_amount: Math.round(default_price * 100), // Amount in cents
-        currency: "usd", // Replace with your desired currency
-      },
+      images,
+    });
+
+    // Create a price for the product
+    const price = await stripe.prices.create({
+      unit_amount: Math.round(default_price * 100), // Convert to cents
+      currency: 'usd',
+      product: product.id,
     });
 
     return new Response(
-      JSON.stringify({ success: true, product }),
+      JSON.stringify({
+        message: "Product created successfully",
+        product,
+        price,
+      }),
       {
-        status: 200,
+        status: 201,
         headers: {
           "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*", // Allow all origins
         },
       }
     );
   } catch (error) {
-    console.error("Error creating product in Stripe:", error);
+    console.error("Error creating product:", error);
     return new Response(
-      JSON.stringify({ error: "Failed to create product" }),
+      JSON.stringify({ error: "Internal server error", details: error.message }),
       {
         status: 500,
         headers: {
           "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*", // Allow all origins
         },
       }
     );
