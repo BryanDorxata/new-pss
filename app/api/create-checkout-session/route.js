@@ -3,15 +3,9 @@ import Stripe from 'stripe';
 // Retrieve the secret key from environment variables
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // Securely use environment variable
 
-// Define allowed origins (Add your Webflow and custom domains here)
-const allowedOrigins = [
-  'https://pss-5215cc.webflow.io',            // Main Webflow URL
-  'https://pss-5215cc.webflow.io/stripe-testing',  // Specific page URL
-];
-
 // Common CORS headers
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',  // Allow any origin for debugging
+  'Access-Control-Allow-Origin': '*', // Allow all origins
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
@@ -26,22 +20,6 @@ export async function OPTIONS() {
 
 // Handle POST requests
 export async function POST(req) {
-  // Log the incoming origin for debugging
-  const origin = req.headers.get('Origin');
-  console.log('Request Origin:', origin);
-
-  // Check if the origin is allowed (strict CORS check)
-  if (!allowedOrigins.includes(origin)) {
-    console.log('CORS Error: Origin not allowed', origin);
-    return new Response(
-      JSON.stringify({ error: 'CORS error: Origin not allowed' }),
-      {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  }
-
   try {
     // Parse the request body
     const body = await req.json();
@@ -62,10 +40,11 @@ export async function POST(req) {
         },
       ],
       mode: 'payment',
-      success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/cancel`,
+      success_url: `${req.headers.get('Origin')}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.get('Origin')}/cancel`,
     });
 
+    // Return the session URL
     return new Response(
       JSON.stringify({ url: session.url }),
       {
