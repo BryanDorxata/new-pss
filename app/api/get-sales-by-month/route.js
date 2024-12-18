@@ -23,18 +23,23 @@ async function fetchAllCharges() {
   let hasMore = true;
   let lastChargeId = null;
 
-  while (hasMore) {
-    const { data, has_more } = await stripe.charges.list({
-      limit: 100,
-      starting_after: lastChargeId, // Use the last retrieved charge ID to fetch the next page
-    });
+  try {
+    while (hasMore) {
+      const { data, has_more } = await stripe.charges.list({
+        limit: 100,
+        starting_after: lastChargeId, // Use the last retrieved charge ID to fetch the next page
+      });
 
-    charges = charges.concat(data); // Append new charges to the list
-    hasMore = has_more; // Stripe indicates if there are more pages
-    if (hasMore) lastChargeId = data[data.length - 1].id; // Update the last charge ID
+      charges = charges.concat(data); // Append new charges to the list
+      hasMore = has_more; // Stripe indicates if there are more pages
+      if (hasMore) lastChargeId = data[data.length - 1].id; // Update the last charge ID
+    }
+
+    return charges;
+  } catch (err) {
+    console.error('Error fetching charges from Stripe:', err.message);
+    throw err;
   }
-
-  return charges;
 }
 
 // Handle GET requests
@@ -47,7 +52,9 @@ export async function GET() {
     };
 
     // Retrieve all charges from Stripe
+    console.log('Fetching all charges from Stripe...');
     const charges = await fetchAllCharges();
+    console.log('Charges fetched successfully:', charges.length);
 
     // Filter successful charges and group by month
     const salesByMonth = charges
@@ -58,6 +65,8 @@ export async function GET() {
         return acc;
       }, {});
 
+    console.log('Sales grouped by month:', salesByMonth);
+
     // Convert salesByMonth object to array
     const result = Object.entries(salesByMonth).map(([month, total_sales]) => ({
       month,
@@ -67,9 +76,9 @@ export async function GET() {
     // Return the result
     return new Response(JSON.stringify(result), { status: 200, headers });
   } catch (err) {
-    console.error('Error fetching sales data from Stripe:', err);
+    console.error('Error fetching sales data from Stripe:', err.message);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error', details: err.message }),
       { status: 500, headers: corsHeaders }
     );
   }
