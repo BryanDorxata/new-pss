@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Handle POST requests
-export async function POST(req) {
+export async function POST() { // Removed `req` since it's not used
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
