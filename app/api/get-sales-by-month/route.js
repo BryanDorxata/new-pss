@@ -1,10 +1,23 @@
 import Stripe from 'stripe';
 
-// Initialize the Stripe client
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // Replace with your actual Stripe secret key
+
+// Handle preflight (OPTIONS) requests
+export async function OPTIONS() {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
+}
 
 // Handle POST requests
-export async function POST() { // Removed `req` since it's not used
+export async function POST() {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -12,49 +25,40 @@ export async function POST() { // Removed `req` since it's not used
   };
 
   try {
-    // Fetch all charges
-    const fetchAllCharges = async () => {
-      let charges = [];
-      let hasMore = true;
-      let lastChargeId = null;
+    let hasMore = true;
+    let startingAfter = null;
+    const salesByMonth = {};
 
-      try {
-        while (hasMore) {
-          const params = { limit: 100 };
-          if (lastChargeId) {
-            params.starting_after = lastChargeId; // Include `starting_after` only if we have a value
+    while (hasMore) {
+      const params = {
+        limit: 100,
+        ...(startingAfter && { starting_after: startingAfter }),
+      };
+
+      const charges = await stripe.charges.list(params);
+
+      charges.data.forEach((charge) => {
+        if (charge.paid && charge.status === 'succeeded') {
+          const date = new Date(charge.created * 1000); // Convert Unix timestamp to JavaScript Date
+          const month = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+
+          if (!salesByMonth[month]) {
+            salesByMonth[month] = {
+              totalSales: 0,
+              count: 0,
+            };
           }
 
-          const { data, has_more } = await stripe.charges.list(params);
-
-          charges = charges.concat(data); // Append new charges to the list
-          hasMore = has_more; // Stripe indicates if there are more pages
-          if (hasMore) lastChargeId = data[data.length - 1].id; // Update the last charge ID
+          salesByMonth[month].totalSales += charge.amount;
+          salesByMonth[month].count += 1;
         }
+      });
 
-        return charges;
-      } catch (err) {
-        console.error('Error fetching charges from Stripe:', err.message);
-        throw err;
+      hasMore = charges.has_more;
+      if (hasMore) {
+        startingAfter = charges.data[charges.data.length - 1].id;
       }
-    };
-
-    const charges = await fetchAllCharges();
-
-    // Group charges by month and calculate total sales
-    const salesByMonth = charges.reduce((acc, charge) => {
-      if (charge.status === 'succeeded') {
-        const date = new Date(charge.created * 1000); // Convert Unix timestamp to Date
-        const monthYear = `${date.getMonth() + 1}-${date.getFullYear()}`; // Format as MM-YYYY
-
-        if (!acc[monthYear]) {
-          acc[monthYear] = 0;
-        }
-
-        acc[monthYear] += charge.amount / 100; // Convert cents to dollars
-      }
-      return acc;
-    }, {});
+    }
 
     return new Response(
       JSON.stringify(salesByMonth),
@@ -64,7 +68,7 @@ export async function POST() { // Removed `req` since it's not used
       }
     );
   } catch (err) {
-    console.error('Error:', err.message);
+    console.error('Error fetching sales by month:', err);
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: err.message }),
       {
@@ -73,16 +77,4 @@ export async function POST() { // Removed `req` since it's not used
       }
     );
   }
-}
-
-// Handle preflight (OPTIONS) requests
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
 }
