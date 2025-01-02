@@ -14,10 +14,15 @@ export async function POST(req) {
   const headers = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   };
 
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers });
+  }
+
   try {
-    // Parse request body
     const body = await req.json();
 
     // Create Stripe product
@@ -69,15 +74,11 @@ export async function POST(req) {
     if (error) {
       console.error('Supabase Insert Error:', error);
       return new Response(
-        JSON.stringify({
-          error: 'Failed to insert custom urn into database',
-          details: error.message || error,
-        }),
+        JSON.stringify({ error: 'Failed to insert into database', details: error.message }),
         { status: 500, headers }
       );
     }
 
-    // Return success response
     return new Response(
       JSON.stringify({ message: 'Custom urn created successfully', data }),
       { status: 200, headers }
@@ -85,10 +86,7 @@ export async function POST(req) {
   } catch (err) {
     console.error('Error:', err);
     return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        details: err.message,
-      }),
+      JSON.stringify({ error: 'Internal server error', details: err.message }),
       { status: 500, headers }
     );
   }
