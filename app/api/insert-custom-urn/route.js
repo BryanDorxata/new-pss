@@ -1,15 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
-import Stripe from 'stripe';
-
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
-
-// Initialize Stripe client
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 export async function POST(req) {
   const headers = {
     'Content-Type': 'application/json',
@@ -24,8 +12,9 @@ export async function POST(req) {
 
   try {
     const body = await req.json();
+    console.log('Received request body:', body);
 
-    // Create Stripe product
+    // Stripe Product Creation
     const product = await stripe.products.create({
       name: body.urn_text || 'Custom Urn',
       description: 'Custom-designed urn',
@@ -34,15 +23,17 @@ export async function POST(req) {
         urn_size: body.urn_size || 'N/A',
       },
     });
+    console.log('Stripe product created:', product.id);
 
-    // Create Stripe price
+    // Stripe Price Creation
     const price = await stripe.prices.create({
       unit_amount: body.price,
       currency: 'usd',
       product: product.id,
     });
+    console.log('Stripe price created:', price.id);
 
-    // Insert data into Supabase
+    // Supabase Insert
     const { data, error } = await supabase.from('custom_design').insert([
       {
         color: body.color || null,
@@ -79,6 +70,7 @@ export async function POST(req) {
       );
     }
 
+    console.log('Data successfully inserted into Supabase:', data);
     return new Response(
       JSON.stringify({ message: 'Custom urn created successfully', data }),
       { status: 200, headers }
