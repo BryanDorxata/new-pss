@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client
 const supabase = createClient(
   process.env.PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -9,12 +8,11 @@ const supabase = createClient(
 export async function POST(req) {
   const headers = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Origin': '*', // Allow all origins
+    'Access-Control-Allow-Methods': 'POST, OPTIONS', // Allowed methods
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization', // Allowed headers
   };
 
-  // Handle preflight request
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers });
   }
@@ -22,7 +20,6 @@ export async function POST(req) {
   try {
     const body = await req.json();
 
-    // Insert data into the custom_design table
     const { data, error } = await supabase.from('custom_design').insert([
       {
         color: body.color || null,
@@ -46,8 +43,6 @@ export async function POST(req) {
         price: body.price || null,
         store_reference: body.store_reference || null,
         order_reference: body.order_reference || null,
-        stripe_product_id: null, // Not adding Stripe info for now
-        stripe_price_id: null,
       },
     ]);
 
