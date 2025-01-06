@@ -11,26 +11,27 @@ const supabase = createClient(
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
-  // Extract origin from headers
-  const allowedOrigin = req.headers.get('origin') || '*';
   const headers = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Origin': '*', // Allow all origins for debugging
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   };
 
-  // Handle preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS preflight request');
     return new Response(null, { status: 204, headers });
   }
 
   try {
+    console.log('Processing POST request');
+    console.log('Request Origin:', req.headers.get('origin'));
+
     const body = await req.json();
+    console.log('Request Body:', body);
 
     // Validate required fields
-    const { price, store_reference, order_reference } = body;
-    if (!price || !store_reference || !order_reference) {
+    if (!body.price || !body.store_reference || !body.order_reference) {
       return new Response(
         JSON.stringify({
           error: 'Price, store_reference, and order_reference are required.',
@@ -39,7 +40,7 @@ export async function POST(req) {
       );
     }
 
-    // Create a Stripe product
+    // Create Stripe product
     const product = await stripe.products.create({
       name: body.urn_text || 'Custom Urn',
       description: 'Custom-designed urn',
@@ -49,14 +50,14 @@ export async function POST(req) {
       },
     });
 
-    // Create a Stripe price
-    const stripePrice = await stripe.prices.create({
-      unit_amount: price,
+    // Create Stripe price
+    const price = await stripe.prices.create({
+      unit_amount: body.price,
       currency: 'usd',
       product: product.id,
     });
 
-    // Insert data into the Supabase 'custom_design' table
+    // Insert data into Supabase
     const { data, error } = await supabase
       .from('custom_design')
       .insert([
@@ -79,14 +80,14 @@ export async function POST(req) {
           text_size: body.text_size || null,
           text_weight: body.text_weight || null,
           black_text: body.black_text || null,
-          price: price || null,
-          store_reference,
-          order_reference,
+          price: body.price || null,
+          store_reference: body.store_reference,
+          order_reference: body.order_reference,
           stripe_product_id: product.id,
-          stripe_price_id: stripePrice.id,
+          stripe_price_id: price.id,
         },
       ])
-      .select(); // Return the inserted row
+      .select(); // Ensures the inserted row is returned
 
     if (error) {
       console.error('Supabase Insert Error:', error);
@@ -99,12 +100,13 @@ export async function POST(req) {
       );
     }
 
+    console.log('Insert Successful:', data);
     return new Response(
       JSON.stringify({ message: 'Custom urn created successfully', data }),
       { status: 201, headers }
     );
   } catch (err) {
-    console.error('Unexpected Error:', err);
+    console.error('Error occurred:', err.message);
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: err.message }),
       { status: 500, headers }
