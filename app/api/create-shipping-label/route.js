@@ -1,17 +1,16 @@
-import { json, send } from 'route.js';
-import fetch from 'node-fetch';
+import axios from 'axios';
 
-export async function options(req, res) {
-  // For preflight requests, allow all origins
+export async function OPTIONS(req, res) {
+  // Allow all origins for CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.status(204).send(); // No content
+  res.status(204).end(); // No content
 }
 
-export async function post(req, res) {
+export async function POST(req, res) {
   try {
-    // For actual requests, allow all origins
+    // CORS: Add headers for POST if allowed
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -33,23 +32,17 @@ export async function post(req, res) {
     // Parse the request body for the shipping label details
     const payload = req.body;
 
-    // Make the request to ShipStation API
-    const response = await fetch("https://ssapi.shipstation.com/shipments/createlabel", {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(payload),
-    });
+    // Make the request to ShipStation API using axios
+    const response = await axios.post("https://ssapi.shipstation.com/shipments/createlabel", payload, { headers });
 
     // Handle the response
-    if (!response.ok) {
-      const error = await response.text();
-      return send(res, response.status, { error });
+    if (response.status !== 200) {
+      return res.status(response.status).json({ error: response.data });
     }
 
-    const result = await response.json();
-    send(res, 200, result);
+    res.status(200).json(response.data);
 
   } catch (error) {
-    send(res, 500, { error: 'Error creating shipping label', details: error.message });
+    res.status(500).json({ error: 'Error creating shipping label', details: error.message });
   }
 }
