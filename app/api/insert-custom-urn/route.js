@@ -13,7 +13,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 export async function POST(req) {
   const headers = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': 'https://pss-5215cc.webflow.io', // Replace with your Webflow domain
+    'Access-Control-Allow-Origin': '*', // Replace with your Webflow domain
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   };
