@@ -11,10 +11,11 @@ const supabase = createClient(
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
-  // CORS headers
+  // Extract origin from headers
+  const allowedOrigin = req.headers.get('origin') || '*';
   const headers = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*', // Allow all origins
+    'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   };
@@ -87,7 +88,6 @@ export async function POST(req) {
       ])
       .select(); // Return the inserted row
 
-    // Handle Supabase errors
     if (error) {
       console.error('Supabase Insert Error:', error);
       return new Response(
@@ -99,13 +99,11 @@ export async function POST(req) {
       );
     }
 
-    // Success response
     return new Response(
       JSON.stringify({ message: 'Custom urn created successfully', data }),
       { status: 201, headers }
     );
   } catch (err) {
-    // Handle unexpected errors
     console.error('Unexpected Error:', err);
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: err.message }),
