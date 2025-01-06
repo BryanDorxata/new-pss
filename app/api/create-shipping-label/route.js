@@ -1,8 +1,12 @@
-const axios = require('axios');
+import axios from 'axios'; 
 
-exports.handler = async (event, context) => {
+export const config = {
+  runtime: "nodejs18.x", 
+};
+
+export default async function handler(req, res) {
   try {
-    const { carrierCode, serviceCode, ...otherData } = JSON.parse(event.body);
+    const { carrierCode, serviceCode, ...otherData } = req.body; 
 
     const apiKey = process.env.SHIPSTATION_API_KEY;
     const apiSecret = process.env.SHIPSTATION_API_SECRET;
@@ -27,22 +31,13 @@ exports.handler = async (event, context) => {
     );
 
     if (response.status === 200) {
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ success: true, message: 'Shipping label created successfully!', data: response.data }),
-      };
+      return res.status(200).json({ success: true, message: 'Shipping label created successfully!', data: response.data });
     } else {
-      return {
-        statusCode: response.status,
-        body: JSON.stringify({ success: false, message: 'Error creating label', error: response.data }),
-      };
+      return res.status(response.status).json({ success: false, message: 'Error creating label', error: response.data });
     }
 
   } catch (error) {
     console.error('Error:', error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ success: false, message: 'An error occurred', error: error.message }),
-    };
+    return res.status(500).json({ success: false, message: 'An error occurred', error: error.message });
   }
-};
+}
