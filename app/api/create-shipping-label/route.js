@@ -1,75 +1,48 @@
-const express = require('express');
-const shipstation = require('shipstation-api'); // Assuming you've installed the library
+const axios = require('axios');
 
-const app = express();
-const port = process.env.PORT || 3000; // Use a port from Vercel's environment
-
-const shipstationApiKey = process.env.SHIPSTATION_API_KEY;
-const shipstationApiSecret = process.env.SHIPSTATION_API_SECRET;
-
-const shipstationClient = new shipstation.Client(shipstationApiKey, shipstationApiSecret);
-
-// Basic authentication example (replace with your chosen method)
-app.use((req, res, next) => {
-  if (req.headers.authorization !== 'your_secret_token') {
-    return res.status(401).send('Unauthorized');
-  }
-  next();
-});
-
-app.post('/create-label', async (req, res) => {
+exports.handler = async (event, context) => {
   try {
-    const {
-      carrierCode,
-      serviceCode,
-      packageCode,
-      confirmation,
-      shipDate,
-      weight,
-      dimensions,
-      shipFrom,
-      shipTo,
-      insuranceOptions,
-      internationalOptions,
-      advancedOptions,
-      testLabel,
-    } = req.body;
+    const { carrierCode, serviceCode, ...otherData } = JSON.parse(event.body);
 
-    const createLabelRequest = {
-      carrierCode,
-      serviceCode,
-      packageCode,
-      confirmation,
-      shipDate,
-      weight: {
-        value: weight.value,
-        units: weight.units,
-      },
-      dimensions: {
-        units: dimensions.units,
-        length: dimensions.length,
-        width: dimensions.width,
-        height: dimensions.height,
-      },
-      shipFrom,
-      shipTo,
-      insuranceOptions,
-      internationalOptions,
-      advancedOptions,
-      testLabel,
+    const apiKey = process.env.SHIPSTATION_API_KEY;
+    const apiSecret = process.env.SHIPSTATION_API_SECRET;
+
+    const authorization = `Basic ${Buffer.from(`${apiKey}:${apiSecret}`).toString('base64')}`;
+
+    const headers = {
+      'Authorization': authorization,
+      'Content-Type': 'application/json',
     };
 
-    const createLabelResponse = await shipstationClient.createShipment(createLabelRequest);
-
-    res.json({
-      success: true,
-      trackingNumber: createLabelResponse.trackingNumber,
-      labelUrl: createLabelResponse.labelUrl, // Or other relevant label information
+    const body = JSON.stringify({
+      carrierCode,
+      serviceCode,
+      ...otherData,
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Error creating label' });
-  }
-});
 
-app.listen(port, () => console.log(`Server listening on port ${port}`));
+    const response = await axios.post(
+      'https://ssapi.shipstation.com/shipments/createlabel',
+      body,
+      { headers }
+    );
+
+    if (response.status === 200) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ success: true, message: 'Shipping label created successfully!', data: response.data }),
+      };
+    } else {
+      return {
+        statusCode: response.status,
+        body: JSON.stringify({ success: false, message: 'Error creating label', error: response.data }),
+      };
+    }
+
+  } catch (error) {
+    console.error('Error:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ success: false, message: 'An error occurred', error: error.message }),
+    };
+  }
+};
