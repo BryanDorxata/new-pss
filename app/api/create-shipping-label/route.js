@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export async function OPTIONS(req) {
+export async function OPTIONS() {
   // Allow CORS for the OPTIONS preflight request
   return new Response(null, {
     status: 204,
@@ -12,10 +12,10 @@ export async function OPTIONS(req) {
   });
 }
 
-export async function POST(req) {
+export async function POST(request) {
   try {
     // Parse the request body
-    const payload = await req.json();
+    const payload = await request.json();
 
     // CORS headers for the POST request
     const headers = {
