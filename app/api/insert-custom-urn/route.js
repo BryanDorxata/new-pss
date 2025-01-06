@@ -10,21 +10,26 @@ const supabase = createClient(
 // Initialize Stripe client
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+const headers = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*', // Allow all origins
+  'Access-Control-Allow-Methods': 'POST, OPTIONS', // Allow POST and OPTIONS
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization', // Allow these headers
+};
+
+// Handle preflight (OPTIONS) requests
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers });
+}
+
 // Handle POST request
 export async function POST(req) {
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*', // Allow all origins
-    'Access-Control-Allow-Methods': 'POST, OPTIONS', // Allow POST and OPTIONS
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization', // Allow these headers
-  };
-
-  // Handle preflight (OPTIONS) requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers });
-  }
-
   try {
+    // Allow CORS preflight check (OPTIONS request)
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers });
+    }
+
     const body = await req.json();
 
     // Validate required fields
