@@ -14,8 +14,8 @@ export async function POST(req) {
   const headers = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*', // Allow all origins
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS', // Allow POST and OPTIONS
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization', // Allow these headers
   };
 
   // Handle preflight (OPTIONS) requests
