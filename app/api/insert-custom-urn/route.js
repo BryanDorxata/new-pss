@@ -13,22 +13,18 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 export async function POST(req) {
   const headers = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*', // Allow all origins for debugging
+    'Access-Control-Allow-Origin': 'https://pss-5215cc.webflow.io', // Replace with your Webflow domain
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   };
 
+  // Handle preflight (OPTIONS) requests
   if (req.method === 'OPTIONS') {
-    console.log('Handling OPTIONS preflight request');
     return new Response(null, { status: 204, headers });
   }
 
   try {
-    console.log('Processing POST request');
-    console.log('Request Origin:', req.headers.get('origin'));
-
     const body = await req.json();
-    console.log('Request Body:', body);
 
     // Validate required fields
     if (!body.price || !body.store_reference || !body.order_reference) {
@@ -87,7 +83,7 @@ export async function POST(req) {
           stripe_price_id: price.id,
         },
       ])
-      .select(); // Ensures the inserted row is returned
+      .select();
 
     if (error) {
       console.error('Supabase Insert Error:', error);
@@ -100,13 +96,12 @@ export async function POST(req) {
       );
     }
 
-    console.log('Insert Successful:', data);
     return new Response(
       JSON.stringify({ message: 'Custom urn created successfully', data }),
       { status: 201, headers }
     );
   } catch (err) {
-    console.error('Error occurred:', err.message);
+    console.error('Error:', err);
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: err.message }),
       { status: 500, headers }
