@@ -20,7 +20,7 @@ export async function POST(request) {
     // Your ShipStation API credentials
     const apiKey = process.env.SHIPSTATION_API_KEY;
     const apiSecret = process.env.SHIPSTATION_API_SECRET;
-    
+
     // Construct the Basic Authorization header for ShipStation
     const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
 
@@ -53,10 +53,14 @@ export async function POST(request) {
     });
 
   } catch (error) {
-    // Log and handle any errors
-    console.error('Error creating shipping label:', error);
+    // Log detailed error information
+    console.error('Error creating shipping label:', error.response ? error.response.data : error.message);
+
     return new Response(
-      JSON.stringify({ error: 'Error creating shipping label', details: error.message }),
+      JSON.stringify({ 
+        error: 'Error creating shipping label', 
+        details: error.response ? error.response.data : error.message 
+      }),
       {
         status: 500,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, // Add CORS to error response
