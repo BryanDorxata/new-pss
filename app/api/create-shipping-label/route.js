@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export async function OPTIONS(req, res) {
-  // Allow all origins for CORS
+  // Allow all origins for CORS (this is for the preflight request)
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -10,7 +10,7 @@ export async function OPTIONS(req, res) {
 
 export async function POST(req, res) {
   try {
-    // CORS: Add headers for POST if allowed
+    // CORS: Add headers for POST
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -40,6 +40,7 @@ export async function POST(req, res) {
       return res.status(response.status).json({ error: response.data });
     }
 
+    // Respond with the result of the ShipStation request
     res.status(200).json(response.data);
 
   } catch (error) {
