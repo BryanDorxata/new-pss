@@ -2,27 +2,31 @@ import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+const headers = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export async function OPTIONS() {
+  // Preflight response for CORS
+  return new Response(null, { status: 204, headers });
+}
+
 export async function GET(req) {
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  };
-
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers });
-  }
-
   try {
+    // Return CORS headers for GET request
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers });
+    }
+
     // Fetch successful checkout sessions
     const sessions = await stripe.checkout.sessions.list({
-      limit: 100, // Adjust limit as needed (maximum 100 per request)
-      status: 'complete', // Only fetch completed sessions
+      limit: 100, // Adjust as needed
+      status: 'complete',
     });
 
-    // Respond with the fetched data
     return new Response(JSON.stringify(sessions), { status: 200, headers });
   } catch (error) {
     console.error('Stripe API Error:', error);
