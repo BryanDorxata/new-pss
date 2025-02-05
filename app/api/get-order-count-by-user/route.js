@@ -61,7 +61,7 @@ export async function POST(req) {
     // **Step 3: Check if there are orders for this storefront**
     const { data: ordersData, error: ordersError } = await supabase
       .from('orders')
-      .select('id')
+      .select('*')
       .eq('storefront_reference', storefrontData.storefront_uuid);
 
     if (ordersError) {
