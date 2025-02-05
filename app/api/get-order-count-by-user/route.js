@@ -62,7 +62,7 @@ export async function POST(req) {
     const { data: ordersData, error: ordersError } = await supabase
       .from('orders')
       .select('*')
-      .eq('storefront_reference', storefrontData.storefront_uuid);
+      .eq('store_reference', storefrontData.storefront_uuid);
 
     if (ordersError) {
       return new Response(
