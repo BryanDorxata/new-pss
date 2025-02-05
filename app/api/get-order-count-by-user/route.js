@@ -33,7 +33,7 @@ export async function POST(req) {
     // **Step 1: Check if the user exists**
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('uuid')
+      .select('*')
       .eq('id', body.user_uuid)
       .single();
 
