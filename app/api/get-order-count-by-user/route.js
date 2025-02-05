@@ -51,7 +51,7 @@ export async function POST(req) {
     const { count, error: orderError } = await supabase
       .from('orders')
       .select('*', { count: 'exact', head: true })
-      .eq('storefront_uuid', storefront_uuid);
+      .eq('store_reference', storefront_uuid);
 
     if (orderError) {
       return new Response(
