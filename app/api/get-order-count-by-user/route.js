@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client
+// Initialize Supabase
 const supabase = createClient(
   process.env.PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -22,52 +22,54 @@ export async function OPTIONS() {
 export async function POST(req) {
   try {
     const body = await req.json();
+    const { user_uuid } = body;
 
-    if (!body.user_uuid) {
+    if (!user_uuid) {
       return new Response(
-        JSON.stringify({ error: 'Missing user UUID' }),
+        JSON.stringify({ error: 'User UUID is required.' }),
         { status: 400, headers }
       );
     }
 
-    const userUUID = body.user_uuid;
+    // 1. Get the storefront UUID for the given user
+    const { data: storefront, error: storefrontError } = await supabase
+      .from('storefront')
+      .select('storefront_uuid')
+      .eq('user_uuid', user_uuid)
+      .single(); // Expect only one match
 
-    // Get the storefront UUID associated with the user UUID
-    const { data: storefrontData, error: storefrontError } = await supabase
-      .from('storefronts')
-      .select('uuid')
-      .eq('user_uuid', userUUID)
-      .single();
-
-    if (storefrontError || !storefrontData) {
+    if (storefrontError || !storefront) {
       return new Response(
-        JSON.stringify({ error: 'Storefront not found for this user' }),
+        JSON.stringify({ error: 'Storefront not found for this user.' }),
         { status: 404, headers }
       );
     }
 
-    const storefrontUUID = storefrontData.uuid;
+    const { storefront_uuid } = storefront;
 
-    // Get the count of orders related to the storefront UUID
+    // 2. Count the orders for this storefront
     const { count, error: orderError } = await supabase
       .from('orders')
       .select('*', { count: 'exact', head: true })
-      .eq('storefront_uuid', storefrontUUID);
+      .eq('storefront_uuid', storefront_uuid);
 
     if (orderError) {
       return new Response(
-        JSON.stringify({ error: 'Error fetching orders', details: orderError.message }),
+        JSON.stringify({ error: 'Failed to count orders.', details: orderError.message }),
         { status: 500, headers }
       );
     }
 
     return new Response(
-      JSON.stringify({ storefront_uuid: storefrontUUID, order_count: count }),
+      JSON.stringify({
+        message: 'Order count retrieved successfully.',
+        storefront_uuid,
+        order_count: count,
+      }),
       { status: 200, headers }
     );
-
   } catch (err) {
-    console.error('Server Error:', err);
+    console.error('Error:', err);
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: err.message }),
       { status: 500, headers }
