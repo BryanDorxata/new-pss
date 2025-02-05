@@ -35,7 +35,7 @@ export async function POST(req) {
     const { data: storefront, error: storefrontError } = await supabase
       .from('storefront')
       .select('storefront_uuid')
-      .eq('user_uuid', user_uuid)
+      .eq('user_reference', user_uuid)
       .single(); // Expect only one match
 
     if (storefrontError || !storefront) {
