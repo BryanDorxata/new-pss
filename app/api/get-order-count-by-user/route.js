@@ -47,7 +47,7 @@ export async function POST(req) {
     // **Step 2: Check if the storefront exists for this user**
     const { data: storefrontData, error: storefrontError } = await supabase
       .from('storefront')
-      .select('storefront_uuid')
+      .select('*')
       .eq('user_reference', body.user_uuid)
       .single();
 
