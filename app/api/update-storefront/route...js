@@ -2,80 +2,102 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // Use service role key for updates
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
-
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    },
-  });
-}
 
 export async function PATCH(req) {
   try {
-    const { storefront_id, updates } = await req.json();
+    // Parse request body
+    const { storefront_id, ...updatedFields } = await req.json();
 
-    if (!storefront_id || !updates) {
+    if (!storefront_id) {
       return new Response(
-        JSON.stringify({ error: "storefront_id and updates are required" }),
+        JSON.stringify({ error: 'storefront_id is required' }),
         {
           status: 400,
           headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
           },
         }
       );
     }
 
-    // Update the storefront row in Supabase
-    const { data, error: updateError } = await supabase
-      .from("storefront")
-      .update(updates)
-      .eq("id", storefront_id)
-      .select()
-      .single();
+    console.log('Updating storefront:', { storefront_id, ...updatedFields });
+
+    // Update storefront in the database
+    const { error: updateError } = await supabase
+      .from('storefront')
+      .update(updatedFields)
+      .eq('id', storefront_id);
 
     if (updateError) {
-      console.error("Error updating storefront:", updateError); // ✅ Now using the error
+      console.error('Update error:', updateError.message);
       return new Response(
-        JSON.stringify({ error: "Failed to update storefront" }),
+        JSON.stringify({ error: updateError.message }),
         {
           status: 500,
           headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
+    }
+
+    // Fetch updated row
+    const { data, error: fetchError } = await supabase
+      .from('storefront')
+      .select('*')
+      .eq('id', storefront_id)
+      .single();
+
+    if (fetchError) {
+      console.error('Fetch error:', fetchError.message);
+      return new Response(
+        JSON.stringify({ error: fetchError.message }),
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
           },
         }
       );
     }
 
     return new Response(
-      JSON.stringify({ message: "Storefront updated successfully", storefront: data }),
+      JSON.stringify({ success: true, data }),
       {
         status: 200,
         headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
         },
       }
     );
-  } catch (err) { // ✅ Renamed to 'err' to avoid ESLint error
-    console.error("Internal Server Error:", err); // ✅ Now using the error
+  } catch (err) {
+    console.error('Internal server error:', err);
     return new Response(
-      JSON.stringify({ error: "Internal Server Error" }),
+      JSON.stringify({ error: 'Internal server error' }),
       {
         status: 500,
         headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
         },
       }
     );
   }
+}
+
+export function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
 }
