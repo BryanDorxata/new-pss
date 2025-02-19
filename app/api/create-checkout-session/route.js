@@ -23,6 +23,10 @@ export async function POST(req) {
   try {
     // Parse the request body
     const body = await req.json();
+    console.log('Received request body:', body); // Debugging
+
+    // Ensure storeId is received and logged
+    console.log('Received storeId:', body.storeId);
 
     // Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create({
@@ -43,9 +47,11 @@ export async function POST(req) {
       success_url: `${req.headers.get('Origin')}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('Origin')}/cancel`,
       metadata: {
-        storeId: body.storeId || 'unknown', // Store ID from request, default to 'unknown'
+        storeId: body.storeId ? String(body.storeId) : 'unknown', // Ensure storeId is a string
       },
     });
+
+    console.log('Created session with metadata:', session.metadata); // Debugging
 
     // Return the session URL
     return new Response(
