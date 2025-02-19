@@ -34,14 +34,15 @@ export async function PATCH(req) {
     }
 
     // Update the storefront row in Supabase
-    const { data } = await supabase
+    const { data, error: updateError } = await supabase
       .from("storefront")
       .update(updates)
       .eq("id", storefront_id)
       .select()
       .single();
 
-    if (!data) {
+    if (updateError) {
+      console.error("Error updating storefront:", updateError); // ✅ Now using the error
       return new Response(
         JSON.stringify({ error: "Failed to update storefront" }),
         {
@@ -64,7 +65,8 @@ export async function PATCH(req) {
         },
       }
     );
-  } catch (error) {
+  } catch (err) { // ✅ Renamed to 'err' to avoid ESLint error
+    console.error("Internal Server Error:", err); // ✅ Now using the error
     return new Response(
       JSON.stringify({ error: "Internal Server Error" }),
       {
