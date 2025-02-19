@@ -33,16 +33,17 @@ export async function PATCH(req) {
       );
     }
 
-    const { data, error } = await supabase
+    // Update the storefront row in Supabase
+    const { data } = await supabase
       .from("storefront")
       .update(updates)
       .eq("id", storefront_id)
       .select()
       .single();
 
-    if (error) {
+    if (!data) {
       return new Response(
-        JSON.stringify({ error: error.message }),
+        JSON.stringify({ error: "Failed to update storefront" }),
         {
           status: 500,
           headers: {
