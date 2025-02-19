@@ -1,13 +1,16 @@
 import Stripe from 'stripe';
 
+// Retrieve the secret key from environment variables
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // Securely use environment variable
 
+// Common CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*', // Allow all origins
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
+// Handle preflight (OPTIONS) requests
 export async function OPTIONS() {
   return new Response(null, {
     status: 204,
@@ -15,32 +18,36 @@ export async function OPTIONS() {
   });
 }
 
+// Handle POST requests
 export async function POST(req) {
   try {
+    // Parse the request body
     const body = await req.json();
 
+    // Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
         {
           price_data: {
-            currency: body.currency || 'usd',
+            currency: body.currency || 'usd', // Default to USD
             product_data: {
-              name: body.productName || 'Sample Product',
+              name: body.productName || 'Sample Product', // Default product name
             },
-            unit_amount: body.unitAmount || 1000,
+            unit_amount: body.unitAmount || 1000, // Default to $10.00 (in cents)
           },
-          quantity: body.quantity || 1,
+          quantity: body.quantity || 1, // Default quantity
         },
       ],
       mode: 'payment',
       success_url: `${req.headers.get('Origin')}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('Origin')}/cancel`,
       metadata: {
-        storeId: 'unknown',
+        storeId: body.storeId || 'unknown', // Store ID from request, default to 'unknown'
       },
     });
 
+    // Return the session URL
     return new Response(
       JSON.stringify({ url: session.url }),
       {
