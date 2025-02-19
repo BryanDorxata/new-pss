@@ -13,15 +13,10 @@ export async function PATCH(req) {
     // Validate request body
     if (!storefront_id || !updates) {
       return new Response(
-        JSON.stringify({
-          error: 'storefront_id and updates are required',
-        }),
+        JSON.stringify({ error: 'storefront_id and updates are required' }),
         {
           status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
+          headers: getCorsHeaders(),
         }
       );
     }
@@ -42,10 +37,7 @@ export async function PATCH(req) {
       JSON.stringify({ success: true, storefront: data }),
       {
         status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
+        headers: getCorsHeaders(),
       }
     );
   } catch (err) {
@@ -54,22 +46,26 @@ export async function PATCH(req) {
       JSON.stringify({ error: err.message }),
       {
         status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
+        headers: getCorsHeaders(),
       }
     );
   }
 }
 
+// Handle preflight CORS requests
 export function OPTIONS() {
   return new Response(null, {
     status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
+    headers: getCorsHeaders(),
   });
+}
+
+// Helper function to set CORS headers
+function getCorsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': 'https://pss-5215cc.webflow.io', // Your Webflow domain
+    'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Credentials': 'true',
+  };
 }
