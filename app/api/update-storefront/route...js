@@ -7,8 +7,8 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-    // Enable CORS
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Allow Webflow
+    // Enable CORS for Webflow
+    res.setHeader('Access-Control-Allow-Origin', 'https://pss-5215cc.webflow.io'); // Replace '*' with your Webflow URL
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
         return res.status(200).end();
     }
 
-    // Ensure it's a POST request
+    // Only allow POST requests
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
@@ -38,12 +38,13 @@ export default async function handler(req, res) {
             .select()
             .single();
 
-        // Handle Supabase errors
         if (error) {
             console.error('Error updating storefront:', error);
             return res.status(500).json({ error: error.message });
         }
 
+        // Return success response with CORS headers
+        res.setHeader('Access-Control-Allow-Origin', 'https://pss-5215cc.webflow.io'); // Ensure this is present in the response
         return res.status(200).json({
             message: 'Storefront updated successfully',
             storefront: data
@@ -51,6 +52,7 @@ export default async function handler(req, res) {
 
     } catch (error) {
         console.error('Unexpected error:', error);
+        res.setHeader('Access-Control-Allow-Origin', 'https://pss-5215cc.webflow.io'); // Ensure CORS is included in error responses
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 }
