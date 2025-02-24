@@ -1,11 +1,11 @@
 import Stripe from 'stripe';
 
 // Retrieve the secret key from environment variables
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // Securely use environment variable
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Common CORS headers
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*', // Allow all origins
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
@@ -23,10 +23,11 @@ export async function POST(req) {
   try {
     // Parse the request body
     const body = await req.json();
-    console.log('Received request body:', body); // Debugging
+    console.log('Received request body:', body);
 
-    // Ensure storeId is received and logged
+    // Ensure storeId and stripeAccount are received
     console.log('Received storeId:', body.storeId);
+    console.log('Received stripeAccount:', body.stripeAccount);
 
     // Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create({
@@ -34,24 +35,28 @@ export async function POST(req) {
       line_items: [
         {
           price_data: {
-            currency: body.currency || 'usd', // Default to USD
+            currency: body.currency || 'usd',
             product_data: {
-              name: body.productName || 'Sample Product', // Default product name
+              name: body.productName || 'Sample Product',
             },
-            unit_amount: body.unitAmount || 1000, // Default to $10.00 (in cents)
+            unit_amount: body.unitAmount || 1000,
           },
-          quantity: body.quantity || 1, // Default quantity
+          quantity: body.quantity || 1,
         },
       ],
       mode: 'payment',
       success_url: `${req.headers.get('Origin')}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('Origin')}/cancel`,
       metadata: {
-        storeId: body.storeId ? String(body.storeId) : 'unknown', // Ensure storeId is a string
+        storeId: body.storeId ? String(body.storeId) : 'unknown',
       },
+      on_behalf_of: body.stripeAccount || null, // Pass the connected account ID
+      transfer_data: body.stripeAccount
+        ? { destination: body.stripeAccount }
+        : undefined, // Send funds to the connected account
     });
 
-    console.log('Created session with metadata:', session.metadata); // Debugging
+    console.log('Created session with metadata:', session.metadata);
 
     // Return the session URL
     return new Response(
