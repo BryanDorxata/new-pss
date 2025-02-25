@@ -19,7 +19,7 @@ export async function POST(req) {
     const body = await req.json();
     console.log('Received request body:', body);
 
-    const { productName, unitAmount, quantity, storeId, stripeAccount } = body;
+    const { productName, unitAmount, quantity, storeId } = body; // Removed stripeAccount
 
     const sessionData = {
       payment_method_types: ['card'],
@@ -42,13 +42,6 @@ export async function POST(req) {
         customerType: 'webflow-user',
       },
     };
-
-    // ❌ REMOVE on_behalf_of and transfer_data
-    // These parameters only work for Stripe Connect (Express/Custom accounts)
-    // if (stripeAccount && stripeAccount.startsWith('acct_')) {
-    //   sessionData.on_behalf_of = stripeAccount;
-    //   sessionData.transfer_data = { destination: stripeAccount };
-    // }
 
     // Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create(sessionData);
