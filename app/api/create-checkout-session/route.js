@@ -21,10 +21,6 @@ export async function POST(req) {
 
     const { productName, unitAmount, quantity, storeId, stripeAccount } = body;
 
-    if (!stripeAccount) {
-      throw new Error('Missing stripeAccount');
-    }
-
     const sessionData = {
       payment_method_types: ['card'],
       line_items: [
@@ -47,11 +43,12 @@ export async function POST(req) {
       },
     };
 
-    // ✅ Only add Stripe Connect fields if using a Connect account
-    if (stripeAccount.startsWith('acct_')) {
-      sessionData.on_behalf_of = stripeAccount;
-      sessionData.transfer_data = { destination: stripeAccount };
-    }
+    // ❌ REMOVE on_behalf_of and transfer_data
+    // These parameters only work for Stripe Connect (Express/Custom accounts)
+    // if (stripeAccount && stripeAccount.startsWith('acct_')) {
+    //   sessionData.on_behalf_of = stripeAccount;
+    //   sessionData.transfer_data = { destination: stripeAccount };
+    // }
 
     // Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create(sessionData);
