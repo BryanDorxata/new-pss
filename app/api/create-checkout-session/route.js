@@ -10,10 +10,7 @@ const corsHeaders = {
 
 // Handle preflight (OPTIONS) requests
 export async function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: corsHeaders,
-  });
+  return new Response(null, { status: 204, headers: corsHeaders });
 }
 
 // Handle POST requests
@@ -28,8 +25,7 @@ export async function POST(req) {
       throw new Error('Missing stripeAccount');
     }
 
-    // Create Stripe Checkout session with metadata
-    const session = await stripe.checkout.sessions.create({
+    const sessionData = {
       payment_method_types: ['card'],
       line_items: [
         {
@@ -47,13 +43,18 @@ export async function POST(req) {
       metadata: {
         storeId: storeId || 'unknown',
         orderId: `order_${Math.floor(Math.random() * 100000)}`,
-        customerType: 'webflow-user', // Dummy metadata for testing
+        customerType: 'webflow-user',
       },
-      on_behalf_of: stripeAccount, // Use connected account
-      transfer_data: {
-        destination: stripeAccount, // Send payment to the connected account
-      },
-    });
+    };
+
+    // ✅ Only add Stripe Connect fields if using a Connect account
+    if (stripeAccount.startsWith('acct_')) {
+      sessionData.on_behalf_of = stripeAccount;
+      sessionData.transfer_data = { destination: stripeAccount };
+    }
+
+    // Create Stripe Checkout session
+    const session = await stripe.checkout.sessions.create(sessionData);
 
     console.log('Created session:', session);
 
