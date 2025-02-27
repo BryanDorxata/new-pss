@@ -11,6 +11,7 @@ export async function POST(req) {
 
     // Define the order data (modify as per your table schema)
     const {
+      store_reference,
       customer_name,
       customer_email,
       address,
@@ -26,6 +27,7 @@ export async function POST(req) {
       .from('orders')
       .insert([
         {
+          store_reference,
           customer_name,
           customer_email,
           address,
