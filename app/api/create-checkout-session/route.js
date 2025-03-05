@@ -17,38 +17,39 @@ export async function OPTIONS() {
 export async function POST(req) {
   try {
     const body = await req.json();
-    console.log('Received request body:', body);
+    console.log("🔍 Received body:", JSON.stringify(body, null, 2));
 
-    const { products, storeId } = body; // products should be an array of objects
-
-    if (!Array.isArray(products) || products.length === 0) {
-      throw new Error('Products array is required and cannot be empty');
+    // Validate the request
+    if (!body.products || !Array.isArray(body.products) || body.products.length === 0) {
+      throw new Error("Invalid request: 'products' must be a non-empty array.");
     }
 
-    // Convert products to Stripe's line_items format
-    const lineItems = products.map((product) => {
-      if (!product.name || !product.unitAmount || !product.quantity) {
-        throw new Error('Each product must have a name, unitAmount, and quantity');
+    // Validate each product
+    body.products.forEach((product, index) => {
+      if (!product.productName || !product.unitAmount || !product.quantity) {
+        throw new Error(`Product at index ${index} is missing required fields.`);
       }
-
-      return {
-        price_data: {
-          currency: 'usd',
-          product_data: { name: product.name },
-          unit_amount: product.unitAmount,
-        },
-        quantity: product.quantity,
-      };
     });
 
+    // Build line items for Stripe Checkout
+    const line_items = body.products.map(product => ({
+      price_data: {
+        currency: 'usd',
+        product_data: { name: product.productName },
+        unit_amount: product.unitAmount,
+      },
+      quantity: product.quantity,
+    }));
+
+    // Stripe session data
     const sessionData = {
       payment_method_types: ['card'],
-      line_items: lineItems,
+      line_items,
       mode: 'payment',
       success_url: `${req.headers.get('Origin')}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('Origin')}/cancel`,
       metadata: {
-        storeId: storeId || 'unknown',
+        storeId: body.storeId || 'unknown',
         orderId: `order_${Math.floor(Math.random() * 100000)}`,
         customerType: 'webflow-user',
       },
@@ -56,24 +57,17 @@ export async function POST(req) {
 
     // Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create(sessionData);
+    console.log("✅ Created Stripe session:", session.url);
 
-    console.log('Created session:', session);
-
-    return new Response(
-      JSON.stringify({ url: session.url }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    return new Response(JSON.stringify({ url: session.url }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   } catch (error) {
-    console.error('Error:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    console.error("❌ Error processing request:", error.message);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 }
