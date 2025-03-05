@@ -19,20 +19,31 @@ export async function POST(req) {
     const body = await req.json();
     console.log('Received request body:', body);
 
-    const { productName, unitAmount, quantity, storeId } = body; // Removed stripeAccount
+    const { products, storeId } = body; // products should be an array of objects
+
+    if (!Array.isArray(products) || products.length === 0) {
+      throw new Error('Products array is required and cannot be empty');
+    }
+
+    // Convert products to Stripe's line_items format
+    const lineItems = products.map((product) => {
+      if (!product.name || !product.unitAmount || !product.quantity) {
+        throw new Error('Each product must have a name, unitAmount, and quantity');
+      }
+
+      return {
+        price_data: {
+          currency: 'usd',
+          product_data: { name: product.name },
+          unit_amount: product.unitAmount,
+        },
+        quantity: product.quantity,
+      };
+    });
 
     const sessionData = {
       payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: { name: productName || 'Sample Product' },
-            unit_amount: unitAmount || 1000,
-          },
-          quantity: quantity || 1,
-        },
-      ],
+      line_items: lineItems,
       mode: 'payment',
       success_url: `${req.headers.get('Origin')}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('Origin')}/cancel`,
