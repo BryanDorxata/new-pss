@@ -51,7 +51,7 @@ export async function POST(req) {
       metadata: {
         storeId: body.storeId || 'unknown',
         orderId: `order_${Math.floor(Math.random() * 100000)}`,
-        customerType: 'webflow-user',
+        
       },
     };
 
