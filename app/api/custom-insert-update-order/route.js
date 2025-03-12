@@ -24,12 +24,13 @@ export async function OPTIONS() {
 export async function POST(req) {
   try {
     const body = await req.json();
-    
+
+    // Check required fields
     if (!body.price || !body.store_reference || !body.customer_name || !body.customer_email) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400, headers });
     }
 
-    // Create Stripe product
+    // Step 1: Create Stripe product for the custom urn
     let product = await stripe.products.create({
       name: body.urn_text?.top?.text || 'Custom Urn',
       description: 'Custom-designed urn',
@@ -42,7 +43,7 @@ export async function POST(req) {
       product: product.id,
     });
 
-    // Insert custom urn into Supabase
+    // Step 2: Insert custom urn into `custom_design`
     const { data: urnData, error: urnError } = await supabase
       .from('custom_design')
       .insert([
@@ -64,7 +65,24 @@ export async function POST(req) {
     if (urnError) throw urnError;
     const customUrnId = urnData.id;
 
-    // Insert order into Supabase
+    // Step 3: Prepare `products_ordered`, adding the custom urn as a product
+    let productsOrdered = {
+      items: [
+        {
+          id: customUrnId, // Use the inserted urn's ID
+          color: body.color,
+          size: body.urn_size,
+          quantity: 1,
+          price: body.price,
+          text_top: body.urn_text?.top?.text,
+          text_middle: body.urn_text?.middle?.text,
+          text_bottom: body.urn_text?.bottom?.text,
+        },
+        ...(body.products_ordered?.items || []) // Include other ordered products
+      ]
+    };
+
+    // Step 4: Insert order into `orders`
     const { data: orderData, error: orderError } = await supabase
       .from('orders')
       .insert([
@@ -74,7 +92,7 @@ export async function POST(req) {
           customer_email: body.customer_email,
           address: body.address,
           shipping_details: body.shipping_details,
-          products_ordered: body.products_ordered,
+          products_ordered: productsOrdered, // Now contains the custom urn
           confirmation: body.confirmation,
           phone_number: body.phone_number,
         },
@@ -85,7 +103,7 @@ export async function POST(req) {
     if (orderError) throw orderError;
     const orderReference = orderData.id;
 
-    // Update custom_design row with order reference
+    // Step 5: Update `custom_design` row with `order_reference`
     const { error: updateError } = await supabase
       .from('custom_design')
       .update({ order_reference: orderReference })
