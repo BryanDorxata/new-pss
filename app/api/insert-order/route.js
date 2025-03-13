@@ -22,7 +22,7 @@ export async function POST(req) {
       phone_number,
     } = body;
 
-    // Insert the order into the Supabase table
+    // Insert the order into the Supabase table and return the inserted row
     const { data, error } = await supabase
       .from('orders')
       .insert([
@@ -37,13 +37,14 @@ export async function POST(req) {
           shippingDetails,
           phone_number,
         },
-      ]);
+      ])
+      .select(); // ✅ Ensures Supabase returns the inserted data
 
     // Handle errors from Supabase
     if (error) {
-      console.error('Error inserting order:', error);
+      console.error('❌ Error inserting order:', error);
       return new Response(
-        JSON.stringify({ error: 'Failed to insert order.' }),
+        JSON.stringify({ error: 'Failed to insert order.', details: error.message }),
         {
           status: 500,
           headers: {
@@ -56,9 +57,11 @@ export async function POST(req) {
       );
     }
 
+    console.log('✅ Order inserted successfully:', data);
+
     // Success response
     return new Response(
-      JSON.stringify({ success: true, data }),
+      JSON.stringify({ success: true, data }), // ✅ Now properly returning inserted data
       {
         status: 200,
         headers: {
@@ -70,9 +73,9 @@ export async function POST(req) {
       }
     );
   } catch (err) {
-    console.error('Unexpected error:', err);
+    console.error('❌ Unexpected error:', err);
     return new Response(
-      JSON.stringify({ error: 'Unexpected error occurred.' }),
+      JSON.stringify({ error: 'Unexpected error occurred.', details: err.message }),
       {
         status: 500,
         headers: {
