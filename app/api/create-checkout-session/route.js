@@ -50,8 +50,8 @@ export async function POST(req) {
       cancel_url: `${req.headers.get('Origin')}/cancel`,
       metadata: {
         storeId: body.storeId || 'unknown',
-        orderId: `order_${Math.floor(Math.random() * 100000)}`,
-        
+        orderId: body.orderId || 'unknown',
+      
       },
     };
 
