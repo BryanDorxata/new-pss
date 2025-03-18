@@ -28,8 +28,8 @@ export async function POST(req) {
     const fileName = `${Date.now()}-${file.name}`;
 
     // Upload file to Supabase Storage
-    const { data, error } = await supabase.storage
-      .from("your-bucket-name") // Change to your bucket name
+    const { error } = await supabase.storage
+      .from("snapshots") // Change to your actual bucket name
       .upload(`uploads/${fileName}`, file, {
         cacheControl: "3600",
         upsert: false,
@@ -40,9 +40,9 @@ export async function POST(req) {
     }
 
     // Get the public URL of the uploaded image
-    const { publicUrl } = supabase.storage
-      .from("your-bucket-name")
-      .getPublicUrl(`uploads/${fileName}`);
+    const publicUrl = supabase.storage
+      .from("snapshots")
+      .getPublicUrl(`uploads/${fileName}`).publicUrl;
 
     return new Response(
       JSON.stringify({ success: true, url: publicUrl }),
