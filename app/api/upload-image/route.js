@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-
 const supabase = createClient(
   process.env.PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -9,7 +8,6 @@ export async function POST(req) {
   try {
     const formData = await req.formData();
     const file = formData.get("file");
-
     if (!file) {
       return new Response(
         JSON.stringify({ error: "No file provided" }),
@@ -24,9 +22,7 @@ export async function POST(req) {
         }
       );
     }
-
     const fileName = `${Date.now()}-${file.name}`;
-
     // Upload file to Supabase Storage
     const { error } = await supabase.storage
       .from("snapshots") // Change to your actual bucket name
@@ -34,16 +30,16 @@ export async function POST(req) {
         cacheControl: "3600",
         upsert: false,
       });
-
     if (error) {
       throw error;
     }
-
     // Get the public URL of the uploaded image
-    const publicUrl = supabase.storage
+    const { data } = supabase.storage
       .from("snapshots")
-      .getPublicUrl(`uploads/${fileName}`).publicUrl;
-
+      .getPublicUrl(`uploads/${fileName}`);
+    
+    const publicUrl = data.publicUrl;
+    
     return new Response(
       JSON.stringify({ success: true, url: publicUrl }),
       {
