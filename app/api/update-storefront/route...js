@@ -1,33 +1,34 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Initialize Supabase client
 const supabase = createClient(
   process.env.PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+// Function to handle CORS headers
+function corsHeaders(response) {
+  response.headers.set('Access-Control-Allow-Origin', '*');
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  return response;
+}
+
+// Handle PATCH request (update storefront)
 export async function PATCH(req) {
   try {
-    // Ensure CORS headers are always included
-    const headers = {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    };
-
-    // Parse request body
     const { storefront_id, ...updatedFields } = await req.json();
 
     if (!storefront_id) {
-      return new Response(JSON.stringify({ error: 'storefront_id is required' }), {
+      return corsHeaders(new Response(JSON.stringify({ error: 'storefront_id is required' }), { 
         status: 400,
-        headers,
-      });
+        headers: { 'Content-Type': 'application/json' },
+      }));
     }
 
     console.log('Updating storefront:', { storefront_id, ...updatedFields });
 
-    // Update storefront in the database
+    // Update storefront in Supabase
     const { error: updateError } = await supabase
       .from('storefront')
       .update(updatedFields)
@@ -35,10 +36,10 @@ export async function PATCH(req) {
 
     if (updateError) {
       console.error('Update error:', updateError.message);
-      return new Response(JSON.stringify({ error: updateError.message }), {
+      return corsHeaders(new Response(JSON.stringify({ error: updateError.message }), { 
         status: 500,
-        headers,
-      });
+        headers: { 'Content-Type': 'application/json' },
+      }));
     }
 
     // Fetch updated row
@@ -50,25 +51,22 @@ export async function PATCH(req) {
 
     if (fetchError) {
       console.error('Fetch error:', fetchError.message);
-      return new Response(JSON.stringify({ error: fetchError.message }), {
+      return corsHeaders(new Response(JSON.stringify({ error: fetchError.message }), { 
         status: 500,
-        headers,
-      });
+        headers: { 'Content-Type': 'application/json' },
+      }));
     }
 
-    return new Response(JSON.stringify({ success: true, data }), {
+    return corsHeaders(new Response(JSON.stringify({ success: true, data }), { 
       status: 200,
-      headers,
-    });
+      headers: { 'Content-Type': 'application/json' },
+    }));
   } catch (err) {
     console.error('Internal server error:', err);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    return corsHeaders(new Response(JSON.stringify({ error: 'Internal server error' }), { 
       status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
+      headers: { 'Content-Type': 'application/json' },
+    }));
   }
 }
 
