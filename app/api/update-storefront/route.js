@@ -25,11 +25,13 @@ export async function POST(req) {
       .eq("id", storefront_id);
 
     if (error) {
+      console.error("Supabase update error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
-  } catch (err) {
+  } catch (error) {
+    console.error("Internal server error:", error); // ✅ Now logging the error properly
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
