@@ -51,8 +51,15 @@ export async function POST(req) {
       metadata: {
         storeId: body.storeId || 'unknown',
         orderId: body.orderId || 'unknown',
-      
       },
+      // Add payment_intent_data to specify the application fee
+      payment_intent_data: {
+        application_fee_amount: calculateApplicationFee(body.products), // Function to calculate your fee
+        transfer_data: {
+          destination: body.connectedAccountId, // The ID of the connected account
+        },
+      },
+      on_behalf_of: body.connectedAccountId, // Specify the connected account
     };
 
     // Create Stripe Checkout session
@@ -70,4 +77,13 @@ export async function POST(req) {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
+}
+
+
+function calculateApplicationFee(products) {
+  let totalAmount = 0;
+  products.forEach(product => {
+    totalAmount += product.unitAmount * product.quantity;
+  });  
+  return Math.round(totalAmount * 0.10);
 }
