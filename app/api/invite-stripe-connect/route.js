@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-export async function POST(req) { //  Remove 'req'
+export async function POST() {
   try {
     // 1. Create the Stripe Connect Account
     const account = await stripe.accounts.create({
@@ -28,7 +28,7 @@ export async function POST(req) { //  Remove 'req'
     // 3. Return the Account Link URL
     return NextResponse.json({ url: accountLink.url }, {
       headers: {
-        'Access-Control-Allow-Origin': '*', // Or restrict to your domain: 'https://your-platform.com'
+        'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST',
         'Access-Control-Allow-Headers': 'Content-Type',
       },
@@ -38,7 +38,7 @@ export async function POST(req) { //  Remove 'req'
     return NextResponse.json({ error: error.message || 'Failed to create Stripe Connect account' }, {
       status: 500,
       headers: {
-        'Access-Control-Allow-Origin': '*', // Or restrict to your domain
+        'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST',
         'Access-Control-Allow-Headers': 'Content-Type',
       },
@@ -46,14 +46,14 @@ export async function POST(req) { //  Remove 'req'
   }
 }
 
-export const OPTIONS = async (req) => { // Remove 'req'
+export async function OPTIONS() { // Changed to async
   return NextResponse.json(
     {},
     {
       status: 200,
       headers: {
         "Allow": "POST, OPTIONS",
-        "Access-Control-Allow-Origin": "*", // Or restrict to your domain
+        "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type",
       },
