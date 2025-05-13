@@ -27,9 +27,9 @@ export async function GET() {
   });
 }
 
-// You can restrict this to your Webflow domain if needed
+//  Restrict to your Webflow domain
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", 
+  "Access-Control-Allow-Origin": "https://octogen-c90396.webflow.io",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
