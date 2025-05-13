@@ -11,7 +11,7 @@
 import { NextResponse } from 'next/server';
 
 // **Important:**
-// 1.  Replace this with your actual Octogen AI API key.
+// 1.  Replace this with your actual Octogen AI key.
 // 2.  DO NOT hardcode your API key directly in your Vercel function code in a production environment.
 //     Instead, store it as an environment variable in your Vercel project settings.
 //     You can access it in your code using `process.env.OCTOGEN_API_KEY`.
