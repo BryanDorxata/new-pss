@@ -12,7 +12,7 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const text = searchParams.get('text') || '';
-    const limit = searchParams.get('limit') || '12'; 
+    const limit = searchParams.get('limit') || '20'; 
 
     // Log the request parameters for debugging
     console.log(`Proxy request: text=${text}, limit=${limit}`);
