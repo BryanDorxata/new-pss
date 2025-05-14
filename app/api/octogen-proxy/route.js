@@ -12,7 +12,7 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const text = searchParams.get('text') || '';
-    const limit = searchParams.get('limit') || '12'; // Re-added limit parameter with default value of 12
+    const limit = searchParams.get('limit') || '12'; 
 
     // Log the request parameters for debugging
     console.log(`Proxy request: text=${text}, limit=${limit}`);
@@ -31,7 +31,7 @@ export async function GET(request) {
 
     // Verify which header to use for the API key (X-API-Key or Authorization)
     // Based on your original code, it seems X-API-Key is the correct header
-    const targetUrl = `https://api.octogen.ai/catalog/agent_search?text=${encodeURIComponent(text)}&limit=${encodeURIComponent(limit)}`; // Re-added limit to the target URL
+    const targetUrl = `https://api.octogen.ai/catalog/agent_search?text=${encodeURIComponent(text)}&limit=${encodeURIComponent(limit)}`; 
     console.log(`Fetching from Octogen API: ${targetUrl}`);
 
     const response = await fetch(targetUrl, {
@@ -39,8 +39,6 @@ export async function GET(request) {
       headers: {
         'Accept': 'application/json',
         'X-API-Key': apiKey,
-        // You might also try this format if the above doesn't work:
-        // 'Authorization': `Bearer ${apiKey}`,
       },
     });
 
@@ -85,9 +83,9 @@ export async function GET(request) {
   }
 }
 
-// Define CORS headers - make sure origin matches your Webflow site
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", // You can restrict this to "https://octogen-c90396.webflow.io"
+  "Access-Control-Allow-Origin": "*", // "https://octogen-c90396.webflow.io"
   "Access-Control-Allow-Methods": "GET, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-API-Key",
 };
