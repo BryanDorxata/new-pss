@@ -12,10 +12,10 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const text = searchParams.get('text') || '';
-    //const limit = searchParams.get('limit') || '8'; // Remove the limit parameter.
+    const limit = searchParams.get('limit') || '12'; // Re-added limit parameter with default value of 12
 
     // Log the request parameters for debugging
-    console.log(`Proxy request: text=${text}`); // Removed limit from log
+    console.log(`Proxy request: text=${text}, limit=${limit}`);
 
     const apiKey = process.env.OCTOGEN_API_KEY;
     if (!apiKey) {
@@ -31,7 +31,7 @@ export async function GET(request) {
 
     // Verify which header to use for the API key (X-API-Key or Authorization)
     // Based on your original code, it seems X-API-Key is the correct header
-    const targetUrl = `https://api.octogen.ai/catalog/agent_search?text=${encodeURIComponent(text)}`; // Removed limit
+    const targetUrl = `https://api.octogen.ai/catalog/agent_search?text=${encodeURIComponent(text)}&limit=${encodeURIComponent(limit)}`; // Re-added limit to the target URL
     console.log(`Fetching from Octogen API: ${targetUrl}`);
 
     const response = await fetch(targetUrl, {
