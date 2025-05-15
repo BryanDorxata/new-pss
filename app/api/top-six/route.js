@@ -42,20 +42,27 @@ export async function GET() {
       .slice(0, 6);
 
     // Format the response
-    const response = {};
+    const responseData = {};
     sortedProducts.forEach(([id, total], index) => {
-      response[`top${index + 1}`] = { id, total };
+      responseData[`top${index + 1}`] = { id, total };
     });
 
-    // Return the response
-    return new Response(JSON.stringify(response), {
+    // Return the response with CORS headers
+    return new Response(JSON.stringify(responseData), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': 'https://pss-5215cc.webflow.io', // Allow requests from your Webflow origin
+        'Access-Control-Allow-Methods': 'GET', // Specify allowed HTTP methods
+        'Access-Control-Allow-Headers': 'Content-Type', // Specify allowed headers
+      },
     });
   } catch (error) {
     return new Response(JSON.stringify({ success: false, error: error.message }), {
       status: 400,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
   }
 }
