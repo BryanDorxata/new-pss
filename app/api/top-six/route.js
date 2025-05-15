@@ -52,7 +52,7 @@ export async function GET() {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': 'https://pss-5215cc.webflow.io', // Allow requests from your Webflow origin
+        'Access-Control-Allow-Origin': '*', // Allow requests from your Webflow origin
         'Access-Control-Allow-Methods': 'GET', // Specify allowed HTTP methods
         'Access-Control-Allow-Headers': 'Content-Type', // Specify allowed headers
       },
