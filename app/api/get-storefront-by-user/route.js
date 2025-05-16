@@ -62,7 +62,7 @@ export async function POST(req) {
     }
 
     // ✅ Return storefront row
-    return new Response(JSON.stringify( storefront ), { status: 200, headers });
+    return new Response(JSON.stringify( {storefront} ), { status: 200, headers });
 
   } catch (err) {
     console.error('Error:', err);
