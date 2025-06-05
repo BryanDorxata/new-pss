@@ -10,22 +10,18 @@ const headers = {
 };
 
 export async function OPTIONS() {
-  // Preflight response for CORS
   return new Response(null, { status: 204, headers });
 }
 
 export async function POST(req) {
   try {
-    // Handle preflight requests
     if (req.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers });
     }
 
-    // Parse the request body
     const body = await req.json();
     const { product_id } = body;
 
-    // Validate product_id
     if (!product_id) {
       return new Response(
         JSON.stringify({ error: 'Product ID is required.' }),
@@ -33,7 +29,6 @@ export async function POST(req) {
       );
     }
 
-    // Archive the product in Stripe
     const product = await stripe.products.update(product_id, {
       active: false, // Mark the product as inactive (archived)
     });
