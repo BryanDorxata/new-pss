@@ -71,7 +71,22 @@ export async function POST(req) {
     //   return new Response(
     //     JSON.stringify({ error: 'Unauthorized: Invalid or missing authentication token.' }),
     //     { status: 401, headers }
-    //   );Response(
+    //   );
+    // }
+    // --- End Authentication/Authorization ---
+
+    // Create the Stripe Account Link.
+    // The `type: 'account_onboarding'` specifies that this link is for
+    // completing the onboarding process.
+    const accountLink = await stripe.accountLinks.create({
+      account: account_id, // The ID of the Stripe Connect account
+      refresh_url: refresh_url, // URL Stripe redirects to if the link expires or is invalid
+      return_url: return_url, // URL Stripe redirects to after onboarding is complete
+      type: 'account_onboarding', // Type of link for onboarding
+    });
+
+    // Return the generated URL to the client.
+    return new Response(
       JSON.stringify({ url: accountLink.url }),
       { status: 200, headers }
     );
@@ -91,18 +106,3 @@ export async function POST(req) {
     );
   }
 }
-    // }
-    // --- End Authentication/Authorization ---
-
-    // Create the Stripe Account Link.
-    // The `type: 'account_onboarding'` specifies that this link is for
-    // completing the onboarding process.
-    const accountLink = await stripe.accountLinks.create({
-      account: account_id, // The ID of the Stripe Connect account
-      refresh_url: refresh_url, // URL Stripe redirects to if the link expires or is invalid
-      return_url: return_url, // URL Stripe redirects to after onboarding is complete
-      type: 'account_onboarding', // Type of link for onboarding
-    });
-
-    // Return the generated URL to the client.
-    return new 
