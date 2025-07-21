@@ -58,15 +58,20 @@ export async function POST(req) {
       });
     }
 
-    // --- CRITICAL CHANGE HERE FOR JSONB COLUMN ---
-    // Use .filter() with the '@>' operator for JSONB array containment
+    // --- CRITICAL CHANGE HERE: Using RPC to call the PostgreSQL function ---
+    // The rpc method expects the function name and then an object of arguments for the function.
+    // The first argument to our function `jsonb_array_contains_text` is `jsonb_array` (which is our 'catalog' column).
+    // The second argument is `search_text` (which is our catalog_name).
+    // The RPC call will select all rows where our custom function returns TRUE.
     const { data, error } = await supabase
-      .from('products_v2')
-      .select('*')
-      .filter('catalog', '@>', `["${catalog_name}"]`); // Search for the exact string within the JSONB array
+      .rpc('jsonb_array_contains_text', {
+          jsonb_array: 'catalog',    // Name of your JSONB array column in the table
+          search_text: catalog_name // The string value you are searching for
+      })
+      .select('*'); // Select all columns from the products_v2 table, filtered by the RPC result
 
     if (error) {
-      console.error('Supabase query error for get-products-by-catalog:', error.message, 'Catalog Name:', catalog_name);
+      console.error('Supabase query error for get-products-by-catalog (RPC):', error.message, 'Catalog Name:', catalog_name);
       return new Response(JSON.stringify({ error: 'Failed to retrieve products by catalog. Please try again later.' }), {
         status: 500,
         headers: COMMON_HEADERS,
