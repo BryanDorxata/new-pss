@@ -58,12 +58,12 @@ export async function POST(req) {
       });
     }
 
-    // Query products_v2 where the 'catalog' array contains the submitted catalog_name
-    // Supabase provides an 'cs' (contains) operator for array columns
+    // --- CRITICAL CHANGE HERE FOR JSONB COLUMN ---
+    // Use .filter() with the '@>' operator for JSONB array containment
     const { data, error } = await supabase
       .from('products_v2')
       .select('*')
-      .contains('catalog', [catalog_name]); // Use 'contains' operator for array matching
+      .filter('catalog', '@>', `["${catalog_name}"]`); // Search for the exact string within the JSONB array
 
     if (error) {
       console.error('Supabase query error for get-products-by-catalog:', error.message, 'Catalog Name:', catalog_name);
@@ -75,8 +75,8 @@ export async function POST(req) {
 
     if (!data || data.length === 0) {
       console.log(`No products found for catalog: ${catalog_name}`);
-      return new Response(JSON.stringify([]), { // Return empty array for no results
-        status: 200, // Still a successful request, just no data
+      return new Response(JSON.stringify([]), {
+        status: 200,
         headers: COMMON_HEADERS,
       });
     }
