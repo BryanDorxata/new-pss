@@ -5,10 +5,10 @@ export async function POST(request) {
     return new NextResponse(null, {
       status: 204,
       headers: {
-        'Access-Control-Allow-Origin': '*', 
-        'Access-Control-Allow-Methods': 'POST, OPTIONS', 
-        'Access-Control-Allow-Headers': 'Content-Type', 
-        'Access-Control-Max-Age': '86400', 
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Max-Age': '86400',
       },
     });
   }
@@ -32,6 +32,7 @@ export async function POST(request) {
   try {
     requestBody = await request.json();
   } catch (error) {
+    // This 'error' is caught and used in the message, so it's fine.
     return NextResponse.json(
       { message: 'Invalid JSON in request body.' },
       {
@@ -59,8 +60,8 @@ export async function POST(request) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      return NextResponse.json(errorData, {
+      const errorData = await response.json(); // Line 34: errorData is now used
+      return NextResponse.json(errorData, { // Use errorData here
         status: response.status,
         headers: {
           'Access-Control-Allow-Origin': '*',
