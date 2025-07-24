@@ -1,16 +1,19 @@
 import { NextResponse } from 'next/server';
 
 export async function POST(request) {
+  // Define common CORS headers
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*', // Allows all origins (consider restricting in production)
+    'Access-Control-Allow-Methods': 'POST, OPTIONS', // Allowed methods
+    'Access-Control-Allow-Headers': 'Content-Type', // Allowed headers
+    'Access-Control-Max-Age': '86400', // Cache preflight response for 24 hours
+  };
+
   // Handle preflight OPTIONS requests for CORS
   if (request.method === 'OPTIONS') {
     return new NextResponse(null, {
       status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*', // Allows all origins (consider restricting in production)
-        'Access-Control-Allow-Methods': 'POST, OPTIONS', // Allowed methods
-        'Access-Control-Allow-Headers': 'Content-Type', // Allowed headers
-        'Access-Control-Max-Age': '86400', // Cache preflight response for 24 hours
-      },
+      headers: corsHeaders, // Apply common CORS headers
     });
   }
 
@@ -24,9 +27,7 @@ export async function POST(request) {
       { message: 'Server configuration error: ShipStation API keys not found.' },
       {
         status: 500,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-        },
+        headers: corsHeaders, // Apply common CORS headers to error response
       }
     );
   }
@@ -35,15 +36,13 @@ export async function POST(request) {
   try {
     // Attempt to parse the request body as JSON
     requestBody = await request.json();
-  } catch (parseError) { // Changed 'error' to 'parseError' for clarity and to avoid potential ESLint confusion
+  } catch (parseError) {
     // Handle invalid JSON in the request body
     return NextResponse.json(
       { message: 'Bad Request: Invalid JSON in request body.', error: parseError.message },
       {
         status: 400,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-        },
+        headers: corsHeaders, // Apply common CORS headers to error response
       }
     );
   }
@@ -59,7 +58,6 @@ export async function POST(request) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'Host': 'ssapi.shipstation.com', // 'Host' header is typically added automatically by fetch
         Authorization: `Basic ${authString}`,
       },
       body: JSON.stringify(requestBody), // Send the parsed request body to ShipStation
@@ -68,13 +66,11 @@ export async function POST(request) {
     // Check if the ShipStation API call was successful
     if (!response.ok) {
       // If ShipStation returns an error, parse its error response
-      const shipstationErrorData = await response.json(); // Renamed from 'errorData' for clarity
-      console.error('ShipStation API error:', shipstationErrorData); // Log the error from ShipStation
-      return NextResponse.json(shipstationErrorData, { // Return ShipStation's error response to the client
+      const shipstationErrorData = await response.json();
+      console.error('ShipStation API error:', shipstationErrorData);
+      return NextResponse.json(shipstationErrorData, {
         status: response.status,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-        },
+        headers: corsHeaders, // Apply common CORS headers to ShipStation error response
       });
     }
 
@@ -84,20 +80,16 @@ export async function POST(request) {
     // Return the rates data to the client
     return NextResponse.json(data, {
       status: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: corsHeaders, // Apply common CORS headers to successful response
     });
-  } catch (fetchError) { // Changed 'error' to 'fetchError' for clarity
+  } catch (fetchError) {
     // Catch any network errors or issues during the fetch operation itself
     console.error('Error calculating rates from ShipStation (network/fetch error):', fetchError);
     return NextResponse.json(
       { message: 'Internal Server Error: Could not connect to ShipStation API.', error: fetchError.message },
       {
         status: 500,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-        },
+        headers: corsHeaders, // Apply common CORS headers to network error response
       }
     );
   }
