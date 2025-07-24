@@ -23,7 +23,7 @@ export async function POST(req) {
     }
 
     const { data, error } = await supabase
-      .from("products")
+      .from("products_v2")
       .select("*")
       .eq("id", id)
       .single();
