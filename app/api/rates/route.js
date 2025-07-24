@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 
 export async function POST(request) {
-  // Define common CORS headers
+  // Define common CORS headers, now including 'Authorization' in allowed headers
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*', // Allows all origins (consider restricting in production)
     'Access-Control-Allow-Methods': 'POST, OPTIONS', // Allowed methods
-    'Access-Control-Allow-Headers': 'Content-Type', // Allowed headers
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization', // IMPORTANT: Added 'Authorization'
     'Access-Control-Max-Age': '86400', // Cache preflight response for 24 hours
   };
 
