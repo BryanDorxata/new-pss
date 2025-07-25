@@ -10,59 +10,58 @@ export async function POST(req) {
     const { id } = await req.json();
 
     if (!id) {
-      return new Response(
-        JSON.stringify({ error: "Product ID is required" }),
-        {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*", // Allow all origins
-          },
-        }
-      );
+      return new Response(JSON.stringify({ error: "Product ID is required" }), {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
     }
 
     const { data, error } = await supabase
       .from("products_v2")
       .select("*")
       .eq("id", id)
-      .single();
+      .maybeSingle(); // ✅ Use maybeSingle to avoid errors when 0 rows
 
     if (error) {
-      return new Response(
-        JSON.stringify({ error: error.message }),
-        {
-          status: 500,
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*", // Allow all origins
-          },
-        }
-      );
-    }
-
-    return new Response(
-      JSON.stringify(data),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*", // Allow all origins
-        },
-      }
-    );
-  } catch (err) {
-    console.error("Error fetching product:", err);
-    return new Response(
-      JSON.stringify({ error: "Internal server error" }),
-      {
+      console.error("Supabase error:", error);
+      return new Response(JSON.stringify({ error: error.message }), {
         status: 500,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*", // Allow all origins
+          "Access-Control-Allow-Origin": "*",
         },
-      }
-    );
+      });
+    }
+
+    if (!data) {
+      return new Response(JSON.stringify({ error: "Product not found" }), {
+        status: 404,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    }
+
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
+  } catch (err) {
+    console.error("Unexpected server error:", err);
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
   }
 }
 
@@ -70,9 +69,9 @@ export function OPTIONS() {
   return new Response(null, {
     status: 204,
     headers: {
-      "Access-Control-Allow-Origin": "*", // Allow all origins
-      "Access-Control-Allow-Methods": "POST, OPTIONS", // Allowed methods
-      "Access-Control-Allow-Headers": "Content-Type", // Allowed headers
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
     },
   });
 }
