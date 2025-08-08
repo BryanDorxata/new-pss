@@ -15,6 +15,9 @@ export async function POST(req) {
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+          "Access-Control-Allow-Credentials": "true",
         },
       });
     }
@@ -31,6 +34,9 @@ export async function POST(req) {
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+          "Access-Control-Allow-Credentials": "true",
         },
       });
     }
@@ -41,6 +47,9 @@ export async function POST(req) {
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+          "Access-Control-Allow-Credentials": "true",
         },
       });
     }
@@ -50,6 +59,9 @@ export async function POST(req) {
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Access-Control-Allow-Credentials": "true",
       },
     });
   } catch (err) {
@@ -59,6 +71,9 @@ export async function POST(req) {
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Access-Control-Allow-Credentials": "true",
       },
     });
   }
@@ -70,7 +85,9 @@ export function OPTIONS() {
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+      "Access-Control-Allow-Credentials": "true",
+      "Access-Control-Max-Age": "86400", // Cache preflight for 24 hours
     },
   });
 }
