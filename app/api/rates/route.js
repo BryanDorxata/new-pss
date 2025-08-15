@@ -59,6 +59,11 @@ export async function POST(request) {
 
     const data = await response.json();
 
+    // 💰 Sort the data by shipmentCost in ascending order
+    if (Array.isArray(data)) {
+      data.sort((a, b) => a.shipmentCost - b.shipmentCost);
+    }
+
     return new NextResponse(JSON.stringify(data), {
       status: response.status,
       headers: corsHeaders,
