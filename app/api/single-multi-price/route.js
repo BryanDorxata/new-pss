@@ -140,10 +140,9 @@ export async function POST(req) {
     });
 
     // Perform the bulk update
-    const { data: updatedProducts, error: updateError } = await supabase
+    const { error: updateError } = await supabase
       .from('products_v2')
-      .upsert(productsToUpdate, { onConflict: 'id' })
-      .select('id, sku, name, default_price');
+      .upsert(productsToUpdate, { onConflict: 'id' });
 
     if (updateError) {
       throw new Error(`Error updating product prices: ${updateError.message}`);
