@@ -60,7 +60,7 @@ export async function POST(req) {
     });
 
     console.log("✅ Created simple Stripe session:", session.url);
-
+    console.log("string", session);
     return new Response(JSON.stringify({ url: session.url }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -75,3 +75,4 @@ export async function POST(req) {
     });
   }
 }
+
