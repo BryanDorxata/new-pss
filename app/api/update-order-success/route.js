@@ -50,7 +50,7 @@ export async function POST(req) {
     // Check if order exists first
     const { data: existingOrder, error: fetchError } = await supabase
       .from('orders')
-      .select('id, customer_name, customer_email, confirmation, shippingDetails')
+      .select('*')
       .eq('id', orderId)
       .single();
 
@@ -92,27 +92,23 @@ export async function POST(req) {
       .from('orders')
       .update(updateData)
       .eq('id', orderId)
-      .select('id, customer_name, customer_email, confirmation, shippingDetails, updated_at')
+      .select('*')
       .single();
 
     if (updateError) {
       throw new Error(`Error updating order: ${updateError.message}`);
     }
 
-    // Prepare response with before/after comparison
+    // Prepare response with the complete updated order
     const response = {
       success: true,
       message: 'Order updated successfully',
       orderId: orderId,
       updatedFields: {},
-      orderInfo: {
-        customerName: updatedOrder.customer_name,
-        customerEmail: updatedOrder.customer_email,
-        updatedAt: updatedOrder.updated_at
-      }
+      order: updatedOrder
     };
 
-    // Show what was updated
+    // Show what was updated for reference
     if (confirmation !== undefined) {
       response.updatedFields.confirmation = {
         old: existingOrder.confirmation,
