@@ -46,7 +46,13 @@ export async function POST(req) {
       );
     }
 
-    if (!data || data.length === 0) {
+    // Additional client-side filtering as backup (in case database query doesn't work as expected)
+    const filteredData = data?.filter(product => 
+      product.name === name.trim() && 
+      product.store_reference === storefrontId.trim()
+    ) || [];
+
+    if (!filteredData || filteredData.length === 0) {
       return createResponse(
         { 
           error: "No products found", 
@@ -59,8 +65,8 @@ export async function POST(req) {
     // Return the products with additional metadata
     return createResponse({
       success: true,
-      count: data.length,
-      products: data
+      count: filteredData.length,
+      products: filteredData
     });
 
   } catch (err) {
