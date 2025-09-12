@@ -1,14 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
+
 const supabase = createClient(
   process.env.PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
+
 export async function POST(req) {
   try {
-    const { name } = await req.json();
+    const { name, storefrontId } = await req.json();
 
-    if (!name) {
-      return new Response(JSON.stringify({ error: "Product name is required" }), {
+    if (!name || !storefrontId) {
+      return new Response(JSON.stringify({ error: "Product name and storefrontId are required" }), {
         status: 400,
         headers: {
           "Content-Type": "application/json",
@@ -19,10 +21,13 @@ export async function POST(req) {
         },
       });
     }
+
     const { data, error } = await supabase
       .from("products_v2")
-      .select("")
-      .eq("name", name); // Use eq for exact name match
+      .select("*")
+      .eq("name", name) // ✅ exact name match
+      .eq("store_reference", storefrontId); // ✅ filter by store
+
     if (error) {
       console.error("Supabase error:", error);
       return new Response(JSON.stringify({ error: error.message }), {
@@ -36,8 +41,9 @@ export async function POST(req) {
         },
       });
     }
+
     if (!data || data.length === 0) {
-      return new Response(JSON.stringify({ error: "No products found with that name" }), {
+      return new Response(JSON.stringify({ error: "No products found with that name for this storefront" }), {
         status: 404,
         headers: {
           "Content-Type": "application/json",
@@ -48,6 +54,7 @@ export async function POST(req) {
         },
       });
     }
+
     return new Response(JSON.stringify(data), {
       status: 200,
       headers: {
@@ -72,6 +79,7 @@ export async function POST(req) {
     });
   }
 }
+
 export function OPTIONS() {
   return new Response(null, {
     status: 204,
@@ -84,4 +92,3 @@ export function OPTIONS() {
     },
   });
 }
-
