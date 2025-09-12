@@ -47,9 +47,12 @@ export async function POST(req) {
     }
 
     // Additional client-side filtering as backup (in case database query doesn't work as expected)
+    const trimmedName = name.trim();
+    const trimmedStorefrontId = storefrontId.trim();
+    
     const filteredData = data?.filter(product => 
-      product.name === name.trim() && 
-      product.store_reference === storefrontId.trim()
+      product.name === trimmedName && 
+      product.store_reference === trimmedStorefrontId
     ) || [];
 
     if (!filteredData || filteredData.length === 0) {
