@@ -1,95 +1,77 @@
 import { createClient } from '@supabase/supabase-js';
-
 const supabase = createClient(
   process.env.PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
-
-// CORS headers configuration
-const CORS_HEADERS = {
-  "Content-Type": "application/json",
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
-  "Access-Control-Allow-Credentials": "true",
-};
-
-// Helper function to create JSON responses with CORS
-function createResponse(data, status = 200, additionalHeaders = {}) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { ...CORS_HEADERS, ...additionalHeaders },
-  });
-}
-
 export async function POST(req) {
   try {
     const { name } = await req.json();
-    
-    if (!name || name.trim() === "") {
-      return createResponse(
-        { error: "Product name is required" }, 
-        400
-      );
-    }
 
+    if (!name) {
+      return new Response(JSON.stringify({ error: "Product name is required" }), {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+          "Access-Control-Allow-Credentials": "true",
+        },
+      });
+    }
     const { data, error } = await supabase
       .from("products_v2")
-      .select("*")
-      .eq("name", name.trim()); // Trim whitespace for better matching
-
+      .select("")
+      .eq("name", name); // Use eq for exact name match
     if (error) {
       console.error("Supabase error:", error);
-      return createResponse(
-        { error: "Database query failed", details: error.message }, 
-        500
-      );
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+          "Access-Control-Allow-Credentials": "true",
+        },
+      });
     }
-
-    // Additional client-side filtering as backup (in case database query doesn't work as expected)
-    const trimmedName = name.trim();
-    const trimmedStorefrontId = storefrontId.trim();
-    
-    const filteredData = data?.filter(product => 
-      product.name === trimmedName && 
-      product.store_reference === trimmedStorefrontId
-    ) || [];
-
-    if (!filteredData || filteredData.length === 0) {
-      return createResponse(
-        { 
-          error: "No products found", 
-          message: `No products found with name: "${name}" for storefront: "${storefrontId}"` 
-        }, 
-        404
-      );
+    if (!data || data.length === 0) {
+      return new Response(JSON.stringify({ error: "No products found with that name" }), {
+        status: 404,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+          "Access-Control-Allow-Credentials": "true",
+        },
+      });
     }
-
-    // Return the products with additional metadata
-    return createResponse({
-      success: true,
-      count: filteredData.length,
-      products: filteredData
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Access-Control-Allow-Credentials": "true",
+      },
     });
-
   } catch (err) {
     console.error("Unexpected server error:", err);
-    
-    // Handle JSON parsing errors specifically
-    if (err instanceof SyntaxError) {
-      return createResponse(
-        { error: "Invalid JSON in request body" }, 
-        400
-      );
-    }
-
-    return createResponse(
-      { error: "Internal server error" }, 
-      500
-    );
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Access-Control-Allow-Credentials": "true",
+      },
+    });
   }
 }
-
 export function OPTIONS() {
   return new Response(null, {
     status: 204,
