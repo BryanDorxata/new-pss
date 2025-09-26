@@ -25,9 +25,9 @@ export async function PATCH(req) {
 
     console.log('Updating product:', { id, ...updatedFields });
 
-    // Update the product in the database
+    // Update the product in the products_v2 table
     const { error: updateError } = await supabase
-      .from('products')
+      .from('products_v2')
       .update(updatedFields)
       .eq('id', id);
 
@@ -45,9 +45,9 @@ export async function PATCH(req) {
       );
     }
 
-    // Fetch the updated row
+    // Fetch the updated row from products_v2 table
     const { data, error: fetchError } = await supabase
-      .from('products')
+      .from('products_v2')
       .select('*')
       .eq('id', id)
       .single();
