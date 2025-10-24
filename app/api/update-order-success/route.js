@@ -8,7 +8,7 @@ const supabase = createClient(
 export async function POST(req) {
   try {
     // Parse the request body
-    const { orderId, confirmation, shippingDetails } = await req.json();
+    const { orderId, confirmation, shipmentID, labelData, trackingNumber } = await req.json();
 
     // Validate required fields
     if (!orderId) {
@@ -18,7 +18,9 @@ export async function POST(req) {
           example: {
             orderId: "05a83ba0-b15e-4959-b901-c26a66e4719b",
             confirmation: "confirmationFromStripe",
-            shippingDetails: "idFromShippingStation"
+            shipmentID: "idFromShippingStation",
+            labelData: "base64EncodedLabelData",
+            trackingNumber: "1Z999AA10123456784"
           }
         }),
         {
@@ -32,10 +34,10 @@ export async function POST(req) {
     }
 
     // Validate that at least one field to update is provided
-    if (confirmation === undefined && shippingDetails === undefined) {
+    if (confirmation === undefined && shipmentID === undefined && labelData === undefined && trackingNumber === undefined) {
       return new Response(
         JSON.stringify({
-          error: 'At least one field must be provided: confirmation or shippingDetails'
+          error: 'At least one field must be provided: confirmation, shipmentID, labelData, or trackingNumber'
         }),
         {
           status: 400,
@@ -83,8 +85,16 @@ export async function POST(req) {
       updateData.confirmation = confirmation;
     }
 
-    if (shippingDetails !== undefined) {
-      updateData.shippingDetails = shippingDetails;
+    if (shipmentID !== undefined) {
+      updateData.shipmentID = shipmentID;
+    }
+
+    if (labelData !== undefined) {
+      updateData.labelData = labelData;
+    }
+
+    if (trackingNumber !== undefined) {
+      updateData.trackingNumber = trackingNumber;
     }
 
     // Perform the update
@@ -116,10 +126,24 @@ export async function POST(req) {
       };
     }
 
-    if (shippingDetails !== undefined) {
-      response.updatedFields.shippingDetails = {
-        old: existingOrder.shippingDetails,
-        new: updatedOrder.shippingDetails
+    if (shipmentID !== undefined) {
+      response.updatedFields.shipmentID = {
+        old: existingOrder.shipmentID,
+        new: updatedOrder.shipmentID
+      };
+    }
+
+    if (labelData !== undefined) {
+      response.updatedFields.labelData = {
+        old: existingOrder.labelData,
+        new: updatedOrder.labelData
+      };
+    }
+
+    if (trackingNumber !== undefined) {
+      response.updatedFields.trackingNumber = {
+        old: existingOrder.trackingNumber,
+        new: updatedOrder.trackingNumber
       };
     }
 
