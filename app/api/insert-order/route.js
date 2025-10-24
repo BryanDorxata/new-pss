@@ -8,8 +8,8 @@ export async function POST(req) {
   try {
     // Parse the request body
     const body = await req.json();
-
-    // Define the order data (modify as per your table schema)
+    
+    // Define the order data (updated with new column names)
     const {
       store_reference,
       customer_name,
@@ -18,10 +18,12 @@ export async function POST(req) {
       shipping_details,
       products_ordered,
       confirmation,
-      shippingDetails,
+      shipmentID,
+      labelData,
+      trackingNumber,
       phone_number,
     } = body;
-
+    
     // Insert the order into the Supabase table and return the inserted row
     const { data, error } = await supabase
       .from('orders')
@@ -34,12 +36,14 @@ export async function POST(req) {
           shipping_details,
           products_ordered,
           confirmation,
-          shippingDetails,
+          shipmentID,
+          labelData,
+          trackingNumber,
           phone_number,
         },
       ])
       .select(); // ✅ Ensures Supabase returns the inserted data
-
+    
     // Handle errors from Supabase
     if (error) {
       console.error('❌ Error inserting order:', error);
@@ -56,9 +60,9 @@ export async function POST(req) {
         }
       );
     }
-
+    
     console.log('✅ Order inserted successfully:', data);
-
+    
     // Success response
     return new Response(
       JSON.stringify({ success: true, data }), // ✅ Now properly returning inserted data
